@@ -253,8 +253,8 @@ flowchart LR
     end
 
     subgraph Dist["DISTRIBUTION"]
-        Online["Online: Full Document<br/>Core + Extensions"]
-        Offline["Offline/Git: Core Only<br/>No Extensions"]
+        Online["Online: Full Document"]
+        Offline["Offline/Git: Core Only"]
     end
 
     API -->|"Real-time"| Online

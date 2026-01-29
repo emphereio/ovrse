@@ -20,14 +20,14 @@ It is meant as a bridge between the higher level overview in `docs/OVRSE_OVERVIE
 
 ```mermaid
 graph TD
-  T[OVRS Templates<br/>YAML files] --> L[Template Loader<br/>pkg/ovrs]
-  K[KB YAML<br/>CveMappings + PackageReleases] --> KL[KB Loader<br/>pkg/kb]
-  I[Host Inventory<br/>pkg/inventory.Host] --> P[Planner<br/>pkg/plan]
+  T[OVRS Templates] --> L[Template Loader]
+  K[KB YAML] --> KL[KB Loader]
+  I[Host Inventory] --> P[Planner]
   L --> P
   KL --> P
-  P --> R[Rendered Plan<br/>pkg/plan + pkg/render]
-  C[ovrse CLI<br/>cmd/ovrse] --> P
-  R --> X[Execution layer<br/>(outside this project)]
+  P --> R[Rendered Plan]
+  C[ovrse CLI] --> P
+  R --> X[Execution Layer]
 ```
 
 ### OVRS Templates (`pkg/ovrs`)

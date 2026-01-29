@@ -39,13 +39,13 @@ OVRSE is built around three core ideas:
 
 ```mermaid
 graph TD
-  A[Scanners / OSV / CSAF / Vendor Advisories] --> B[OVRSE KB<br/>CveMappings + PackageReleases]
-  C[Templates (OVRS YAML)] --> D[Planner]
-  E[Inventory / SBOM<br/>Hosts and packages] --> D
+  A[Scanners / OSV / CSAF / Advisories] --> B[OVRSE KB]
+  C[Templates - OVRS YAML] --> D[Planner]
+  E[Inventory / SBOM] --> D
   B --> D
-  D --> F[Plans<br/>(rendered steps, fixed CVEs)]
+  D --> F[Rendered Plans]
   G[ovrse CLI] --> D
-  F --> H[Execution Layer<br/>(Emphere or other tools)]
+  F --> H[Execution Layer]
 ```
 
 * **Upstream:** scanners and vuln feeds tell us *what* is vulnerable.
