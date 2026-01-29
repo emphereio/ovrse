@@ -1,0 +1,24 @@
+# PackageRelease Example
+#
+# Describes a specific package version and the CVEs it fixes/contains.
+
+packageName: "nginx"
+version: "1.24.0"
+ecosystem: "apt"
+
+osFamily: "debian"
+distribution: "debian"
+release: "12"
+architecture: "amd64"
+
+fixesCves:
+  - "CVE-2025-1234"
+  - "CVE-2025-5678"
+  - "CVE-2024-9999"
+
+hasCves: []                             # No known remaining CVEs in this version
+
+source:
+  kind: "vendor-advisory"
+  reference: "https://security.debian.org/tracker/source-package/nginx"
+  importedAt: "2025-11-22T12:00:00Z"

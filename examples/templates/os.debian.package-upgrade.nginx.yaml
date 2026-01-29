@@ -1,0 +1,120 @@
+id: "os.debian.package-upgrade.nginx"
+version: "1.0.0"
+
+summary: "Upgrade nginx on Debian based hosts to a safe version"
+description: "Performs a controlled nginx upgrade with preflight checks, package upgrade, service restart and basic HTTP health check."
+
+metadata:
+  owner: "emphere-core"
+  visibility: "internal-global"
+  maturity: "experimental"
+  tags: ["os", "nginx", "web", "package-upgrade"]
+
+match:
+  resourceKinds: ["vm"]
+  osFamilies: ["debian"]
+  distributions: ["debian", "ubuntu"]
+  osVersionRange: ">=10"
+  requiredPackages:
+    - name: "nginx"
+  requiredCapabilities:
+    - "os.package_index_refresh"
+    - "os.package_install"
+    - "os.service_restart"
+    - "os.check_package"
+    - "os.check_version_less_than"
+    - "os.check_version_greater_equal"
+
+parameters:
+  - name: "targetPackage"
+    type: "string"
+    required: true
+    description: "Name of the package to upgrade"
+
+  - name: "targetVersion"
+    type: "string"
+    required: true
+    description: "Minimum version that is considered fixed"
+
+  - name: "serviceName"
+    type: "string"
+    required: true
+    description: "Service that should be restarted after upgrade"
+
+preflight:
+  - id: "check_package_installed"
+    kind: "os.check_package"
+    params:
+      package: "{{ targetPackage }}"
+
+  - id: "check_version_lt_target"
+    kind: "os.check_version_less_than"
+    params:
+      package: "{{ targetPackage }}"
+      version: "{{ targetVersion }}"
+
+  - id: "check_service_exists"
+    kind: "os.check_service"
+    params:
+      service: "{{ serviceName }}"
+
+steps:
+  - id: "refresh_package_index"
+    kind: "os.package_index_refresh"
+    params: {}
+    retryPolicy:
+      maxAttempts: 3
+
+  - id: "upgrade_package"
+    kind: "os.package_install"
+    dependsOn: ["refresh_package_index"]
+    params:
+      package: "{{ targetPackage }}"
+      versionConstraint: ">= {{ targetVersion }}"
+
+  - id: "restart_service"
+    kind: "os.service_restart"
+    dependsOn: ["upgrade_package"]
+    params:
+      service: "{{ serviceName }}"
+
+  - id: "wait_for_port"
+    kind: "os.wait_for_port"
+    dependsOn: ["restart_service"]
+    params:
+      port: 80
+      timeoutSeconds: 60
+
+validation:
+  - id: "check_package_at_or_above_target"
+    kind: "os.check_version_greater_equal"
+    params:
+      package: "{{ targetPackage }}"
+      version: "{{ targetVersion }}"
+
+  - id: "http_health_check"
+    kind: "http.check"
+    params:
+      url: "http://{{ inventory.hostname }}/"
+      expectedStatus: 200
+
+rollback:
+  strategy: "package-downgrade"
+  steps:
+    - id: "downgrade_package"
+      kind: "os.package_install"
+      params:
+        package: "{{ targetPackage }}"
+        versionConstraint: "< {{ targetVersion }}"
+
+    - id: "restart_service_rollback"
+      kind: "os.service_restart"
+      params:
+        service: "{{ serviceName }}"
+
+remediation:
+  riskLevel: "medium"
+  requiresReboot: false
+  typicalDurationSeconds: 180
+  blastRadiusTags: ["web-tier"]
+  changeType: "standard"
