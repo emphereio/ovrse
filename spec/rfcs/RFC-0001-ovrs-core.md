@@ -238,8 +238,7 @@ metadata:
 
   owners:
     - team: "emphere-core"
-      contact: "security@emphere.com"
-      github: "emphere"
+      github: "emphereio"
 
   tags:
     - os
