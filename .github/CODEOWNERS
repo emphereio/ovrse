@@ -1,0 +1,11 @@
+# CODEOWNERS for OVRSE
+# These owners will be requested for review when someone opens a pull request.
+
+# Default owners for everything in the repo
+*       @emphereio/ovrse-maintainers
+
+# Specification changes require extra review
+/spec/  @emphereio/ovrse-maintainers
+
+# CI/CD and security configurations
+/.github/  @emphereio/ovrse-maintainers
