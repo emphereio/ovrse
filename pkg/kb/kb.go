@@ -11,10 +11,11 @@ type CveMapping struct {
 }
 
 type Applicability struct {
-	OSFamilies    []string `yaml:"osFamilies" json:"osFamilies"`
-	Distributions []string `yaml:"distributions" json:"distributions"`
-	OSVersionRange string  `yaml:"osVersionRange" json:"osVersionRange"`
-	Architectures []string `yaml:"architectures" json:"architectures"`
+	Ecosystems     []string `yaml:"ecosystems" json:"ecosystems"`
+	OSFamilies     []string `yaml:"osFamilies" json:"osFamilies"`
+	Distributions  []string `yaml:"distributions" json:"distributions"`
+	OSVersionRange string   `yaml:"osVersionRange" json:"osVersionRange"`
+	Architectures  []string `yaml:"architectures" json:"architectures"`
 }
 
 type SourceInfo struct {
@@ -23,14 +24,25 @@ type SourceInfo struct {
 	ImportedAt string `yaml:"importedAt" json:"importedAt"`
 }
 
+// Dependency represents a direct dependency of a package version.
+// Used for transitive shadow analysis.
+type Dependency struct {
+	Name      string `yaml:"name" json:"name"`
+	Version   string `yaml:"version" json:"version"`
+	Ecosystem string `yaml:"ecosystem" json:"ecosystem"`
+}
+
 type PackageRelease struct {
-	OSFamily     string     `yaml:"osFamily" json:"osFamily"`
-	Distribution string     `yaml:"distribution" json:"distribution"`
-	Release      string     `yaml:"release" json:"release"`
-	Architecture string     `yaml:"architecture" json:"architecture"`
-	PackageName  string     `yaml:"packageName" json:"packageName"`
-	Version      string     `yaml:"version" json:"version"`
-	FixesCVEs    []string   `yaml:"fixesCves" json:"fixesCves"`
-	Source       SourceInfo `yaml:"source" json:"source"`
-	SourcePath   string     `yaml:"-" json:"-"`
+	PackageName  string       `yaml:"packageName" json:"packageName"`
+	Version      string       `yaml:"version" json:"version"`
+	Ecosystem    string       `yaml:"ecosystem" json:"ecosystem"`
+	OSFamily     string       `yaml:"osFamily" json:"osFamily"`
+	Distribution string       `yaml:"distribution" json:"distribution"`
+	Release      string       `yaml:"release" json:"release"`
+	Architecture string       `yaml:"architecture" json:"architecture"`
+	FixesCVEs    []string     `yaml:"fixesCves" json:"fixesCves"`
+	HasCVEs      []string     `yaml:"hasCves" json:"hasCves"`
+	Dependencies []Dependency `yaml:"dependencies" json:"dependencies"`
+	Source       SourceInfo   `yaml:"source" json:"source"`
+	SourcePath   string       `yaml:"-" json:"-"`
 }

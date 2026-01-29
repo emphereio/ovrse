@@ -231,7 +231,23 @@ func (p *Planner) findTemplate(id string) *ovrs.Template {
 }
 
 // applicabilityMatches tests whether the host satisfies the mapping's applicability.
+// For ecosystem packages (npm, pypi, etc.), applicability is checked via the Ecosystems field.
+// For OS-level packages, OSFamilies, Distributions, and Architectures are used.
 func applicabilityMatches(a kb.Applicability, host inventory.Host) bool {
+	// Ecosystem-level applicability: if ecosystems are specified, this mapping is for
+	// application-level packages. Skip OS-level checks if host has no OS context.
+	// Future: Add Ecosystem field to Host for application-level inventory.
+	if len(a.Ecosystems) > 0 {
+		// If this is an ecosystem-specific mapping but we're matching against a host,
+		// only match if no OS constraints are specified (pure ecosystem mapping).
+		// Otherwise, treat as OS-level mapping that also specifies ecosystem context.
+		if len(a.OSFamilies) == 0 && len(a.Distributions) == 0 && host.OSFamily == "" {
+			// Pure ecosystem mapping against non-OS context - allow match
+			return true
+		}
+	}
+
+	// OS-level applicability checks
 	if len(a.OSFamilies) > 0 && !containsIgnoreCase(a.OSFamilies, host.OSFamily) {
 		return false
 	}
@@ -309,6 +325,8 @@ func parseInt(val string) (int, error) {
 }
 
 // computeFixedCVEsForPackage returns CVEs fixed by upgrading to targetVersion.
+// Supports both OS-level packages (matched by OSFamily/Distribution) and
+// ecosystem packages (matched by Ecosystem field).
 func computeFixedCVEsForPackage(host inventory.Host, packageName, targetVersion string, releases []*kb.PackageRelease) []string {
 	if packageName == "" || targetVersion == "" {
 		return nil
@@ -316,21 +334,32 @@ func computeFixedCVEsForPackage(host inventory.Host, packageName, targetVersion 
 
 	cves := make(map[string]struct{})
 	for _, rel := range releases {
-		if !strings.EqualFold(rel.OSFamily, host.OSFamily) {
-			continue
-		}
-		if !strings.EqualFold(rel.Distribution, host.Distribution) {
-			continue
-		}
-		if rel.Architecture != "" && host.Architecture != "" && !strings.EqualFold(rel.Architecture, host.Architecture) {
-			continue
-		}
 		if !strings.EqualFold(rel.PackageName, packageName) {
 			continue
 		}
 		if rel.Version != targetVersion {
 			continue
 		}
+
+		// Match based on context type:
+		// - If release has Ecosystem but no OSFamily, it's an ecosystem package (npm, pypi, etc.)
+		// - If release has OSFamily, it's an OS-level package
+		if rel.Ecosystem != "" && rel.OSFamily == "" {
+			// Ecosystem package - no OS-level matching needed
+			// Future: could add ecosystem matching when Host supports it
+		} else {
+			// OS-level package - match by OS context
+			if !strings.EqualFold(rel.OSFamily, host.OSFamily) {
+				continue
+			}
+			if rel.Distribution != "" && !strings.EqualFold(rel.Distribution, host.Distribution) {
+				continue
+			}
+			if rel.Architecture != "" && host.Architecture != "" && !strings.EqualFold(rel.Architecture, host.Architecture) {
+				continue
+			}
+		}
+
 		for _, cve := range rel.FixesCVEs {
 			if cve == "" {
 				continue
