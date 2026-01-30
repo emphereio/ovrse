@@ -65,7 +65,7 @@ OVRSE and OVRS exist to give that answer a **shared, portable shape**.
    > "For this CVE, here's the EPSS score, breaking change analysis,
    > stability assessment, and recommended verdict."
 
-   See [`extensions-spec-v1.md`](./spec/extensions-spec-v1.md) for the `emphere.dev/intel` extension.
+   See [`extensions-spec-v1.md`](./spec/extensions-spec-v1.md) for the `intel.emphere.dev/v1` extension.
 
 OVRS is designed to be:
 
@@ -152,7 +152,7 @@ OVRSE focuses on step 2: **turning “we found something” into “here’s a c
 A simplified example of an OVRS `RemediationTemplate` for Debian package upgrades:
 
 ```yaml
-apiVersion: ovrs.emphere.dev/v1
+apiVersion: ovrse.dev/v1
 kind: RemediationTemplate
 
 metadata:

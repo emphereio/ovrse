@@ -25,7 +25,7 @@ flowchart TB
     end
 
     subgraph Intel["2. INTELLIGENCE LAYER (Dynamic)"]
-        Ext[extensions.emphere.dev/intel]
+        Ext[extensions.intel.emphere.dev/v1]
     end
 
     subgraph Plan["3. PLANNING LAYER (Computed)"]
@@ -69,7 +69,7 @@ flowchart LR
     end
 
     subgraph Extensions["Extensions"]
-        I[emphere.dev/intel]
+        I[intel.emphere.dev/v1]
     end
 
     M -->|references| T
@@ -117,7 +117,7 @@ applicability:
   osFamilies: ["debian"]
 
 extensions:
-  emphere.dev/intel:
+  intel.emphere.dev/v1:
     verdict: "patch_immediately"
     confidence: 0.95
 ```
@@ -141,7 +141,7 @@ OVRSE supports namespaced extensions to attach additional metadata:
 
 | Namespace | Description |
 |-----------|-------------|
-| `emphere.dev/intel` | CVE intelligence (urgency, breaking changes, stability) |
+| `intel.emphere.dev/v1` | CVE intelligence (urgency, breaking changes, stability) |
 
 See [extensions-spec-v1.md](./extensions-spec-v1.md) for the full extension specification.
 
@@ -238,7 +238,7 @@ flowchart TD
 1. **Lookup**: Find CveMappings for the CVE
 2. **Match**: Filter by applicability (OS, ecosystem, architecture)
 3. **Template**: Load the referenced RemediationTemplate
-4. **Intelligence**: Check `extensions.emphere.dev/intel` for verdict and urgency
+4. **Intelligence**: Check `extensions.intel.emphere.dev/v1` for verdict and urgency
 5. **Plan**: Instantiate template with parameters into a remediation plan
 6. **Execute**: Run the plan or present to user for review
 
@@ -270,7 +270,7 @@ flowchart LR
 
 **Why this matters:**
 
-Extensions like `emphere.dev/intel` contain dynamic intelligence (EPSS scores, breaking changes, stability analysis) that:
+Extensions like `intel.emphere.dev/v1` contain dynamic intelligence (EPSS scores, breaking changes, stability analysis) that:
 - Changes frequently (EPSS updates daily)
 - Is computationally expensive to generate
 - May be proprietary to the extension provider
@@ -280,11 +280,11 @@ By separating core documents (stable, open) from extensions (dynamic, may be pro
 - Proprietary value-add via extensions
 - Offline operation with degraded functionality
 
-**Implementation note:** Tools consuming OVRSE documents SHOULD handle missing extensions gracefully. If `extensions.emphere.dev/intel` is not present, use default prioritization logic instead of failing.
+**Implementation note:** Tools consuming OVRSE documents SHOULD handle missing extensions gracefully. If `extensions.intel.emphere.dev/v1` is not present, use default prioritization logic instead of failing.
 
 ## Versioning
 
-- Documents specify `apiVersion` (e.g., `ovrse.emphere.dev/v1`)
+- Documents specify `apiVersion` (e.g., `ovrse.dev/v1`)
 - Templates specify `version` (semver for content changes)
 - Extensions may have independent versions
 
