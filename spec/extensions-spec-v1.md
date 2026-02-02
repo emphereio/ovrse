@@ -29,6 +29,11 @@ Implementations MUST:
 - Preserve unknown extension namespaces when reading and writing documents
 - Ignore extension namespaces they do not understand
 - Handle missing extensions gracefully (extensions are OPTIONAL)
+- Reject documents with duplicate extension namespaces during validation
+- Return a clear error identifying the duplicate namespace
+
+Producers MUST:
+- Never emit duplicate extension namespaces
 
 Implementations MAY:
 - Validate extension data against registered schemas
