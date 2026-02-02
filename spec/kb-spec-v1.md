@@ -44,7 +44,7 @@ applicability:
 
 source:
   kind: "emphere-intel"
-  reference: "https://intel.emphere.dev/v1/CVE-2025-1234"
+  reference: "https://api.emphere.dev/v1/intel/CVE-2025-1234"
   importedAt: "2025-11-22T12:00:00Z"
 
 extensions:
