@@ -24,6 +24,9 @@ This document defines two core entities:
 A `CveMapping` links a CVE to a remediation template and parameter values, under certain applicability constraints. It may also carry intelligence extensions from analysis engines.
 
 ```yaml
+apiVersion: ovrse.dev/v1
+kind: CveMapping
+
 cveId: "CVE-2025-1234"
 
 templateId: "os.debian.package-upgrade.nginx"
@@ -41,11 +44,11 @@ applicability:
 
 source:
   kind: "emphere-intel"
-  reference: "https://emphere.dev/intel/CVE-2025-1234"
+  reference: "https://api.emphere.dev/v1/intel/CVE-2025-1234"
   importedAt: "2025-11-22T12:00:00Z"
 
 extensions:
-  emphere.dev/intel:
+  intel.emphere.dev/v1:
     verdict: "patch_with_caution"
     confidence: 0.85
     # ... see extensions-spec-v1.md for full schema
@@ -113,13 +116,13 @@ Provenance information for the mapping.
 #### `extensions` (optional)
 Namespaced extension data. Consumers that do not understand a namespace SHOULD ignore it.
 
-Extensions enable tools to attach additional metadata without modifying the core spec. The namespace format is a reverse domain name (e.g., `emphere.dev/intel`).
+Extensions enable tools to attach additional metadata without modifying the core spec. The namespace format is a subdomain with version suffix (e.g., `intel.emphere.dev/v1`).
 
 See [extensions-spec-v1.md](./extensions-spec-v1.md) for defined extension namespaces.
 
 ```yaml
 extensions:
-  emphere.dev/intel:
+  intel.emphere.dev/v1:
     verdict: "patch_immediately"
     confidence: 0.95
     urgency:
@@ -255,7 +258,7 @@ flowchart LR
 1. From inventory, determine that a host is running `nginx` 1.22.0 on Debian 12.
 2. From `PackageRelease`, determine that `nginx` 1.24.0 fixes CVE-2025-1234 and CVE-2025-5678.
 3. From `CveMapping`, determine that CVE-2025-1234 on Debian can be remediated with template `os.debian.package-upgrade.nginx`.
-4. Check `extensions.emphere.dev/intel` for breaking changes, stability, and urgency signals.
+4. Check `extensions["intel.emphere.dev/v1"]` for breaking changes, stability, and urgency signals.
 5. Instantiate the template with parameters into a plan for that host.
 
 ---

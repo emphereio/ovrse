@@ -37,14 +37,14 @@ The goal of this specification is to give:
   Defines the structures used in the knowledge base: CveMapping (with extensions) and PackageRelease (with dependencies).
 
 - [`extensions-spec-v1.md`](./extensions-spec-v1.md)
-  Defines extension namespaces including `emphere.dev/intel` for CVE intelligence.
+  Defines extension namespaces including `intel.emphere.dev/v1` for CVE intelligence.
 
 ## Architecture
 
 OVRSE follows a three-layer architecture:
 
 1. **Spec Layer (Static)** - Document schemas (CveMapping, PackageRelease, RemediationTemplate)
-2. **Intelligence Layer (Dynamic)** - Analysis data attached via extensions (e.g., `emphere.dev/intel`)
+2. **Intelligence Layer (Dynamic)** - Analysis data attached via extensions (e.g., `intel.emphere.dev/v1`)
 3. **Planning Layer (Computed)** - Remediation plans computed at runtime from spec + intelligence
 
 See [SPEC.md](./SPEC.md) for details.
