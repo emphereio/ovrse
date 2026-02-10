@@ -35,6 +35,30 @@ OVRSE and OVRS exist to give that answer a **shared, portable shape**.
 
 ---
 
+## See it in action
+
+The fastest way to try OVRS is through the MCP server at [emphere.com/mcp](https://emphere.com/mcp).
+
+Connect it to Claude Code, Cursor, or any MCP-compatible client, then ask about any CVE:
+
+```
+"Is my xz-utils affected by CVE-2024-3094?"
+```
+
+The MCP reads your local context and returns a personalized response:
+
+- **Not affected** — You're on 5.2.5. Backdoor only in 5.6.0+.
+- **If upgrading:** liblzma ABI changed in 5.6.x, rebuild linked apps.
+- **Stability:** No regret signals from community.
+
+The MCP server uses OVRS under the hood to structure remediation knowledge and keep it current.
+
+<div align="center">
+  <img src="assets/emphere-intel-mcp.png" alt="Emphere Intel MCP in Claude Code" width="700"/>
+</div>
+
+---
+
 ## What is OVRS?
 
 **OVRS (Open Vulnerability Remediation Specification)** is a vendor-neutral format for:
