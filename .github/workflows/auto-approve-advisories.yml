@@ -1,0 +1,61 @@
+name: Auto-approve Advisory Sync
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'advisories/**'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  auto-approve:
+    name: Auto-approve if advisory-only
+    runs-on: ubuntu-latest
+    # Only run for PRs from github-actions bot
+    if: github.actor == 'github-actions[bot]'
+
+    steps:
+      - name: Verify PR only touches advisories/
+        id: verify
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                per_page: 100,
+              }
+            );
+
+            console.log(`Checking ${files.length} changed files:`);
+            for (const file of files) {
+              console.log(`  ${file.filename}`);
+              if (!file.filename.startsWith('advisories/')) {
+                core.setOutput('safe', 'false');
+                core.error(`PR contains non-advisory file: ${file.filename}`);
+                return;
+              }
+            }
+
+            console.log('All changes are within advisories/');
+            core.setOutput('safe', 'true');
+
+      - name: Approve PR
+        if: steps.verify.outputs.safe == 'true'
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.APPROVE_PAT }}
+          review-message: "Auto-approved: PR only modifies advisories/ folder."
+
+      - name: Enable auto-merge
+        if: steps.verify.outputs.safe == 'true'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: squash

@@ -13,9 +13,9 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 env:
-  # Default ecosystems to sync
   DEFAULT_ECOSYSTEMS: 'npm pypi go maven cargo gem'
 
 jobs:
@@ -89,25 +89,37 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
-          if git diff --quiet advisories/ && [ -z "$(git ls-files --others --exclude-standard advisories/)" ]; then
+          # Get all changed files (staged + unstaged + untracked)
+          CHANGED_FILES=$(git diff --name-only; git ls-files --others --exclude-standard)
+
+          if [ -z "$CHANGED_FILES" ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "No changes detected"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Changes detected:"
-            git diff --stat advisories/
-            git ls-files --others --exclude-standard advisories/
+            exit 0
           fi
 
-      - name: Commit and push
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "Changes detected:"
+          echo "$CHANGED_FILES"
+
+      # Security: Fail if any changes are outside advisories/
+      - name: Verify changes are limited to advisories/
         if: steps.changes.outputs.changed == 'true'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          CHANGED_FILES=$(git diff --name-only; git ls-files --others --exclude-standard)
 
-          git add advisories/
+          for file in $CHANGED_FILES; do
+            if [[ ! "$file" =~ ^advisories/ ]]; then
+              echo "::error::Unexpected change outside advisories/: $file"
+              exit 1
+            fi
+          done
+          echo "All changes are within advisories/ folder"
 
-          # Build commit message with summary
+      - name: Build summary
+        if: steps.changes.outputs.changed == 'true'
+        id: summary
+        run: |
           SUMMARY=""
           for f in advisories/*.json; do
             if [ -f "$f" ]; then
@@ -116,9 +128,24 @@ jobs:
               SUMMARY="$SUMMARY $ECO:$COUNT"
             fi
           done
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
 
-          git commit -m "chore: sync advisories $(date -u +%Y-%m-%dT%H:%M:%SZ)
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          # Use fixed branch name so PR gets updated, not duplicated
+          branch: chore/sync-advisories
+          delete-branch: true
+          title: 'chore: sync advisories'
+          body: |
+            Automated advisory sync from Emphere Intel.
 
-Summary:$SUMMARY"
+            **Summary:**${{ steps.summary.outputs.summary }}
 
-          git push
+            This PR only modifies files in `advisories/` folder.
+          commit-message: 'chore: sync advisories ${{ steps.summary.outputs.summary }}'
+          # Only commit changes in advisories/ folder
+          add-paths: |
+            advisories/
+          labels: advisory, automated
