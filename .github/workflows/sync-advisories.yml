@@ -13,9 +13,9 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 env:
-  # Default ecosystems to sync
   DEFAULT_ECOSYSTEMS: 'npm pypi go maven cargo gem'
 
 jobs:
@@ -86,28 +86,9 @@ jobs:
             fi
           done
 
-      - name: Check for changes
-        id: changes
+      - name: Build summary
+        id: summary
         run: |
-          if git diff --quiet advisories/ && [ -z "$(git ls-files --others --exclude-standard advisories/)" ]; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No changes detected"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Changes detected:"
-            git diff --stat advisories/
-            git ls-files --others --exclude-standard advisories/
-          fi
-
-      - name: Commit and push
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add advisories/
-
-          # Build commit message with summary
           SUMMARY=""
           for f in advisories/*.json; do
             if [ -f "$f" ]; then
@@ -116,9 +97,23 @@ jobs:
               SUMMARY="$SUMMARY $ECO:$COUNT"
             fi
           done
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
 
-          git commit -m "chore: sync advisories $(date -u +%Y-%m-%dT%H:%M:%SZ)
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          # Use fixed branch name so PR gets updated, not duplicated
+          branch: chore/sync-advisories
+          delete-branch: true
+          title: 'chore: sync advisories'
+          body: |
+            Automated advisory sync from Emphere Intel.
 
-Summary:$SUMMARY"
+            **Summary:**${{ steps.summary.outputs.summary }}
 
-          git push
+            This PR only modifies files in `advisories/` folder.
+          commit-message: 'chore: sync advisories ${{ steps.summary.outputs.summary }}'
+          # Only commit changes in advisories/ folder
+          add-paths: |
+            advisories/
+          labels: advisory, automated
