@@ -1,0 +1,53 @@
+{
+  "ecosystem": "gem",
+  "window": "30d",
+  "total_cves": 1,
+  "critical_count": 1,
+  "high_count": 0,
+  "medium_count": 0,
+  "low_count": 0,
+  "kev_count": 0,
+  "with_fix_count": 1,
+  "last_updated": "2026-02-15T16:32:15.937613+00:00",
+  "expires_at": "2026-02-15T20:32:15.937613+00:00",
+  "cves": [
+    {
+      "cve_id": "CVE-2025-25291",
+      "summary": "Critical SAML authentication vulnerability with automated exploit tools requires immediate patching within 24-48 hours.",
+      "severity": "critical",
+      "cvss_score": 9.3,
+      "epss_percentile": 0.94123,
+      "kev_listed": false,
+      "has_fix": true,
+      "fix_version": "unknown",
+      "packages": [
+        "storagegrid",
+        "omniauth-saml",
+        "ruby-saml",
+        "omniauth_saml"
+      ],
+      "published_date": null,
+      "kev_date_added": null,
+      "added_to_advisory": "2026-02-14T00:31:51.911858+00:00",
+      "priority_score": 47.1869
+    }
+  ],
+  "top_packages": [
+    {
+      "package": "storagegrid",
+      "count": 1
+    },
+    {
+      "package": "omniauth-saml",
+      "count": 1
+    },
+    {
+      "package": "ruby-saml",
+      "count": 1
+    },
+    {
+      "package": "omniauth_saml",
+      "count": 1
+    }
+  ]
+}

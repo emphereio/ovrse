@@ -1,0 +1,124 @@
+name: Sync Advisories
+
+on:
+  schedule:
+    # Every 4 hours, offset 30 minutes from intel-engine advisory generation
+    - cron: '30 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      ecosystems:
+        description: 'Ecosystems to sync (space-separated, or "all")'
+        required: false
+        default: 'all'
+
+permissions:
+  contents: write
+
+env:
+  # Default ecosystems to sync
+  DEFAULT_ECOSYSTEMS: 'npm pypi go maven cargo gem'
+
+jobs:
+  sync:
+    name: Sync Advisories from Emphere Intel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine ecosystems
+        id: ecosystems
+        run: |
+          INPUT="${{ github.event.inputs.ecosystems }}"
+          if [ -z "$INPUT" ] || [ "$INPUT" = "all" ]; then
+            echo "list=$DEFAULT_ECOSYSTEMS" >> $GITHUB_OUTPUT
+          else
+            echo "list=$INPUT" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch Advisories
+        env:
+          INTEL_ENGINE_URL: ${{ vars.INTEL_ENGINE_URL || 'https://api.emphere.dev' }}
+        run: |
+          mkdir -p advisories
+
+          ECOSYSTEMS="${{ steps.ecosystems.outputs.list }}"
+          FAILED=""
+
+          for eco in $ECOSYSTEMS; do
+            echo "Fetching $eco advisory..."
+            if curl -sf "${INTEL_ENGINE_URL}/v1/advisories/${eco}?window=30d" \
+              -H "Accept: application/json" \
+              -o "advisories/${eco}.json"; then
+              echo "  OK: $(jq -r '.total_cves // 0' advisories/${eco}.json) CVEs"
+            else
+              echo "  FAILED: Could not fetch $eco"
+              FAILED="$FAILED $eco"
+            fi
+          done
+
+          echo "Fetching global advisory..."
+          if curl -sf "${INTEL_ENGINE_URL}/v1/advisories/global?window=30d" \
+            -H "Accept: application/json" \
+            -o "advisories/global.json"; then
+            echo "  OK: $(jq -r '.total_cves // 0' advisories/global.json) CVEs across $(jq -r '.total_ecosystems // 0' advisories/global.json) ecosystems"
+          else
+            echo "  FAILED: Could not fetch global"
+            FAILED="$FAILED global"
+          fi
+
+          if [ -n "$FAILED" ]; then
+            echo "::warning::Failed to fetch:$FAILED"
+          fi
+
+      - name: Validate and format JSON files
+        run: |
+          for f in advisories/*.json; do
+            if [ -f "$f" ]; then
+              if jq '.' "$f" > "$f.tmp" 2>/dev/null; then
+                mv "$f.tmp" "$f"
+                echo "Valid: $f"
+              else
+                echo "::error::Invalid JSON: $f"
+                rm -f "$f" "$f.tmp"
+              fi
+            fi
+          done
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet advisories/ && [ -z "$(git ls-files --others --exclude-standard advisories/)" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff --stat advisories/
+            git ls-files --others --exclude-standard advisories/
+          fi
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add advisories/
+
+          # Build commit message with summary
+          SUMMARY=""
+          for f in advisories/*.json; do
+            if [ -f "$f" ]; then
+              ECO=$(basename "$f" .json)
+              COUNT=$(jq -r '.total_cves // 0' "$f")
+              SUMMARY="$SUMMARY $ECO:$COUNT"
+            fi
+          done
+
+          git commit -m "chore: sync advisories $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+Summary:$SUMMARY"
+
+          git push
