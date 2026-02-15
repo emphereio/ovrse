@@ -86,7 +86,38 @@ jobs:
             fi
           done
 
+      - name: Check for changes
+        id: changes
+        run: |
+          # Get all changed files (staged + unstaged + untracked)
+          CHANGED_FILES=$(git diff --name-only; git ls-files --others --exclude-standard)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+            exit 0
+          fi
+
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "Changes detected:"
+          echo "$CHANGED_FILES"
+
+      # Security: Fail if any changes are outside advisories/
+      - name: Verify changes are limited to advisories/
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          CHANGED_FILES=$(git diff --name-only; git ls-files --others --exclude-standard)
+
+          for file in $CHANGED_FILES; do
+            if [[ ! "$file" =~ ^advisories/ ]]; then
+              echo "::error::Unexpected change outside advisories/: $file"
+              exit 1
+            fi
+          done
+          echo "All changes are within advisories/ folder"
+
       - name: Build summary
+        if: steps.changes.outputs.changed == 'true'
         id: summary
         run: |
           SUMMARY=""
@@ -100,6 +131,7 @@ jobs:
           echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           # Use fixed branch name so PR gets updated, not duplicated
