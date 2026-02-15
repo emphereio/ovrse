@@ -1,4 +1,4 @@
-<video src="https://github.com/emphereio/ovrse/raw/main/assets/demo.mp4" controls width="100%"></video>
+<video src="https://github.com/emphereio/ovrse/raw/feat/advisories/assets/demo.mp4" controls width="100%"></video>
 
 <p align="center"><img src="assets/mascot/overseer-cropped.png" alt="The Overseer" width="200"/></p>
 <h1 align="center">OVRSE</h1>
