@@ -123,20 +123,20 @@ The `global.json` file has a different structure—it summarizes all ecosystems:
 
 ```bash
 # Get npm advisory
-curl -s https://raw.githubusercontent.com/emphere/ovrse/main/advisories/npm.json
+curl -s https://raw.githubusercontent.com/emphereio/ovrse/main/advisories/npm.json
 
 # Pretty print top 5 CVEs
-curl -s https://raw.githubusercontent.com/emphere/ovrse/main/advisories/npm.json | jq '.cves[:5]'
+curl -s https://raw.githubusercontent.com/emphereio/ovrse/main/advisories/npm.json | jq '.cves[:5]'
 
 # Get only KEV-listed CVEs
-curl -s https://raw.githubusercontent.com/emphere/ovrse/main/advisories/npm.json | jq '.cves | map(select(.kev_listed))'
+curl -s https://raw.githubusercontent.com/emphereio/ovrse/main/advisories/npm.json | jq '.cves | map(select(.kev_listed))'
 ```
 
 ### Check Your Dependencies
 
 ```bash
 # Check package.json against npm advisory
-curl -s https://raw.githubusercontent.com/emphere/ovrse/main/advisories/npm.json > /tmp/npm-advisory.json
+curl -s https://raw.githubusercontent.com/emphereio/ovrse/main/advisories/npm.json > /tmp/npm-advisory.json
 
 jq -r '.dependencies | keys[]' package.json | while read pkg; do
   match=$(jq --arg pkg "$pkg" '.cves[] | select(.packages[] == $pkg)' /tmp/npm-advisory.json)
@@ -155,7 +155,7 @@ The JSON contains all CVEs from the last 30 days. To get only the last 7 days:
 # Get CVEs from last 7 days
 # Uses: kev_date_added (if KEV), else published_date, else added_to_advisory
 CUTOFF=$(date -u -v-7d +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
-curl -s https://raw.githubusercontent.com/emphere/ovrse/main/advisories/npm.json | \
+curl -s https://raw.githubusercontent.com/emphereio/ovrse/main/advisories/npm.json | \
   jq --arg cutoff "$CUTOFF" '.cves | map(select(
     (.kev_date_added // .published_date // .added_to_advisory) >= $cutoff
   ))'

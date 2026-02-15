@@ -179,19 +179,19 @@ See the [advisories/README.md](../advisories/README.md) for:
 If a critical CVE is missing:
 
 1. Verify it meets the gating thresholds
-2. [Open an issue](https://github.com/emphere/ovrse/issues/new?labels=advisory,missing-cve)
+2. [Open an issue](https://github.com/emphereio/ovrse/issues/new?labels=advisory,missing-cve)
 3. Include: CVE ID, ecosystem, and why it should be included
 
 ### Report Incorrect Data
 
 If advisory data is wrong:
 
-1. [Open an issue](https://github.com/emphere/ovrse/issues/new?labels=advisory,incorrect-data)
+1. [Open an issue](https://github.com/emphereio/ovrse/issues/new?labels=advisory,incorrect-data)
 2. Include: CVE ID, what's wrong, and sources showing the correct information
 
 ### Request a New Ecosystem
 
 To request support for a new ecosystem:
 
-1. [Open an issue](https://github.com/emphere/ovrse/issues/new?labels=advisory,new-ecosystem)
+1. [Open an issue](https://github.com/emphereio/ovrse/issues/new?labels=advisory,new-ecosystem)
 2. Include: ecosystem name, package manager, and vulnerability data sources

@@ -62,7 +62,7 @@ OVRSE powers three entry points:
 Pre-computed CVE priority lists by ecosystem, updated every 4 hours.
 
 ```bash
-curl -s https://raw.githubusercontent.com/emphere/ovrse/main/advisories/npm.json | jq '.cves[:3]'
+curl -s https://raw.githubusercontent.com/emphereio/ovrse/main/advisories/npm.json | jq '.cves[:3]'
 ```
 
 Filter by time: 7d for this week, 30d for this month. → [Browse advisories](./advisories/)
