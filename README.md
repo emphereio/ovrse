@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://www.loom.com/share/4cd7882e1dfe4891a2c93bfabc82f82a">
-    <img src="https://cdn.loom.com/sessions/thumbnails/4cd7882e1dfe4891a2c93bfabc82f82a-e06994f471f64dc0-full-play.gif" alt="Watch: Automated Vulnerability Remediation with Claude" width="60%"/>
+    <img src="https://cdn.loom.com/sessions/thumbnails/4cd7882e1dfe4891a2c93bfabc82f82a-e06994f471f64dc0-full-play.gif" alt="Watch: Automated Vulnerability Remediation with Claude" width="70%"/>
   </a>
 </p>
 
@@ -156,7 +156,7 @@ OVRSE is in early days (v0.1).
 
 ## Contributing
 
-- **Report missing CVEs** → [Open an issue](https://github.com/emphere/ovrse/issues/new?labels=advisory,missing-cve)
+- **Report missing CVEs** → [Open an issue](https://github.com/emphereio/ovrse/issues/new?template=missing_cve.md)
 - **Add templates** → PRs to `examples/templates/`
 - **Improve the spec** → Discussion in issues first, then PR to `spec/`
 

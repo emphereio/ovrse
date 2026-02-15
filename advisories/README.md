@@ -180,21 +180,21 @@ CVEs below these thresholds are still available via the [Emphere Intel API](http
 If a critical CVE is missing from the advisory:
 
 1. Verify it meets the gating thresholds (KEV, EPSS >= 50%, or CVSS >= 9.0)
-2. [Open an issue](https://github.com/emphere/ovrse/issues/new?labels=advisory,missing-cve&title=Missing%20CVE:%20CVE-XXXX-YYYY)
+2. [Open an issue](https://github.com/emphereio/ovrse/issues/new?template=missing_cve.md)
 3. Include: CVE ID, ecosystem, and why it should be included
 
 ### Report Incorrect Data
 
 If advisory data is wrong:
 
-1. [Open an issue](https://github.com/emphere/ovrse/issues/new?labels=advisory,incorrect-data&title=Incorrect%20data:%20CVE-XXXX-YYYY)
+1. [Open an issue](https://github.com/emphereio/ovrse/issues/new?template=incorrect_data.md)
 2. Include: CVE ID, what's wrong, and sources showing the correct information
 
 ### Request a New Ecosystem
 
 To request support for a new ecosystem:
 
-1. [Open an issue](https://github.com/emphere/ovrse/issues/new?labels=advisory,new-ecosystem&title=New%20ecosystem:%20NAME)
+1. [Open an issue](https://github.com/emphereio/ovrse/issues/new?template=new_ecosystem.md)
 2. Include: ecosystem name, package manager, and vulnerability data sources
 
 ## License
