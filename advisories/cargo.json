@@ -1,0 +1,15 @@
+{
+  "ecosystem": "cargo",
+  "window": "30d",
+  "total_cves": 0,
+  "critical_count": 0,
+  "high_count": 0,
+  "medium_count": 0,
+  "low_count": 0,
+  "kev_count": 0,
+  "with_fix_count": 0,
+  "last_updated": "2026-02-15T16:32:15.791312+00:00",
+  "expires_at": "2026-02-15T20:32:15.791312+00:00",
+  "cves": [],
+  "top_packages": []
+}

@@ -1,0 +1,162 @@
+{
+  "window": "30d",
+  "total_cves": 7,
+  "total_ecosystems": 6,
+  "last_updated": "2026-02-15T16:32:16.109797+00:00",
+  "ecosystems": {
+    "pypi": {
+      "ecosystem": "pypi",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-02-15T16:32:15.061282+00:00"
+    },
+    "go": {
+      "ecosystem": "go",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-02-15T16:32:15.308288+00:00"
+    },
+    "npm": {
+      "ecosystem": "npm",
+      "total_cves": 6,
+      "critical_count": 2,
+      "high_count": 2,
+      "kev_count": 3,
+      "with_fix_count": 6,
+      "last_updated": "2026-02-15T16:32:14.461298+00:00"
+    },
+    "gem": {
+      "ecosystem": "gem",
+      "total_cves": 1,
+      "critical_count": 1,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 1,
+      "last_updated": "2026-02-15T16:32:15.937613+00:00"
+    },
+    "cargo": {
+      "ecosystem": "cargo",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-02-15T16:32:15.791312+00:00"
+    },
+    "maven": {
+      "ecosystem": "maven",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-02-15T16:32:15.591181+00:00"
+    }
+  },
+  "top_critical": [
+    {
+      "cve_id": "CVE-2025-11953",
+      "summary": "Critical React Native CLI vulnerability with federal compliance deadline requires immediate patching.",
+      "severity": "critical",
+      "cvss_score": 9.8,
+      "epss_percentile": 0.91232,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "20.1.1",
+      "packages": [
+        "@react-native-community/cli",
+        "react_native_community_cli",
+        "cli",
+        "@react-native-community/cli-server-api"
+      ],
+      "published_date": "2025-11-03T17:15:32.677000+00:00",
+      "kev_date_added": "2026-02-05T00:00:00",
+      "added_to_advisory": "2026-02-15T02:11:33.576147+00:00",
+      "priority_score": 97.06960000000001
+    },
+    {
+      "cve_id": "CVE-2025-54313",
+      "summary": "Critical ESLint configuration vulnerability requires immediate patching by federal deadline February 12th.",
+      "severity": "high",
+      "cvss_score": 7.5,
+      "epss_percentile": 0.88983,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "10.1.8",
+      "packages": [
+        "eslint-config-prettier",
+        "napi-postinstall",
+        "@pkgr/core",
+        "got-fetch",
+        "pkgr\\/core",
+        "eslint-plugin-prettier",
+        "homarr",
+        "synckit"
+      ],
+      "published_date": "2025-07-19T17:15:23.733000+00:00",
+      "kev_date_added": "2026-01-22T00:00:00",
+      "added_to_advisory": "2026-02-15T02:11:33.576095+00:00",
+      "priority_score": 92.9449
+    },
+    {
+      "cve_id": "CVE-2025-31125",
+      "summary": "Critical Vite vulnerability with active exploits requires immediate patching by federal deadline 2026-02-12.",
+      "severity": "medium",
+      "cvss_score": 5.3,
+      "epss_percentile": 0.98465,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "7.3.1",
+      "packages": [
+        "vite"
+      ],
+      "published_date": "2025-03-31T17:15:43.163000+00:00",
+      "kev_date_added": "2026-01-22T00:00:00",
+      "added_to_advisory": "2026-02-15T02:11:33.576130+00:00",
+      "priority_score": 92.4895
+    },
+    {
+      "cve_id": "CVE-2025-25291",
+      "summary": "Critical SAML authentication vulnerability with automated exploit tools requires immediate patching within 24-48 hours.",
+      "severity": "critical",
+      "cvss_score": 9.3,
+      "epss_percentile": 0.94123,
+      "kev_listed": false,
+      "has_fix": true,
+      "fix_version": "unknown",
+      "packages": [
+        "storagegrid",
+        "omniauth-saml",
+        "ruby-saml",
+        "omniauth_saml"
+      ],
+      "published_date": null,
+      "kev_date_added": null,
+      "added_to_advisory": "2026-02-14T00:31:51.911858+00:00",
+      "priority_score": 47.1869
+    },
+    {
+      "cve_id": "CVE-2026-25115",
+      "summary": "Critical container escape vulnerability in n8n requires immediate patching, but major version upgrade needs careful migration planning.",
+      "severity": "critical",
+      "cvss_score": 9.4,
+      "epss_percentile": 0.14676,
+      "kev_listed": false,
+      "has_fix": true,
+      "fix_version": "2.7.4",
+      "packages": [
+        "n8n"
+      ],
+      "published_date": null,
+      "kev_date_added": null,
+      "added_to_advisory": "2026-02-14T00:31:51.171450+00:00",
+      "priority_score": 23.5028
+    }
+  ]
+}
