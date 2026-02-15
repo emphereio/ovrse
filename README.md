@@ -12,7 +12,7 @@
 
 <div align="center">
   <a href="https://www.loom.com/share/4cd7882e1dfe4891a2c93bfabc82f82a">
-    <img src="https://cdn.loom.com/sessions/thumbnails/4cd7882e1dfe4891a2c93bfabc82f82a-e06994f471f64dc0.jpg" alt="Watch: Automated Vulnerability Remediation with Claude" width="600"/>
+    <img src="https://cdn.loom.com/sessions/thumbnails/4cd7882e1dfe4891a2c93bfabc82f82a-e06994f471f64dc0-full-play.gif" alt="Watch: Automated Vulnerability Remediation with Claude" width="600"/>
   </a>
   <p><em>Scan → detect CVE → assess upgrade safety → apply fix — all in one conversation</em></p>
 </div>
