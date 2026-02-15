@@ -1,4 +1,12 @@
-<video src="https://github.com/emphereio/ovrse/raw/feat/advisories/assets/demo.mp4" controls width="100%"></video>
+<h3 align="center">See it in action</h3>
+
+<p align="center">
+  <a href="https://www.loom.com/share/4cd7882e1dfe4891a2c93bfabc82f82a">
+    <img src="https://cdn.loom.com/sessions/thumbnails/4cd7882e1dfe4891a2c93bfabc82f82a-e06994f471f64dc0-full-play.gif" alt="Watch: Automated Vulnerability Remediation with Claude" width="60%"/>
+  </a>
+</p>
+
+---
 
 <p align="center"><img src="assets/mascot/overseer-cropped.png" alt="The Overseer" width="200"/></p>
 <h1 align="center">OVRSE</h1>
@@ -57,7 +65,7 @@ Pre-computed CVE priority lists by ecosystem, updated every 4 hours.
 curl -s https://raw.githubusercontent.com/emphere/ovrse/main/advisories/npm.json | jq '.cves[:3]'
 ```
 
-→ [Browse advisories](./advisories/)
+Filter by time: 7d for this week, 30d for this month. → [Browse advisories](./advisories/)
 
 ### 2. MCP Server — Ask about any CVE
 
