@@ -2,8 +2,8 @@ name: Sync Advisories
 
 on:
   schedule:
-    # Every 4 hours, offset 30 minutes from intel-engine advisory generation
-    - cron: '30 */4 * * *'
+    # Daily at 7AM PST (15:00 UTC)
+    - cron: '0 15 * * *'
   workflow_dispatch:
     inputs:
       ecosystems:
