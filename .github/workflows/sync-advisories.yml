@@ -134,6 +134,7 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
+          token: ${{ secrets.APPROVE_PAT }}
           # Use fixed branch name so PR gets updated, not duplicated
           branch: chore/sync-advisories
           delete-branch: true
