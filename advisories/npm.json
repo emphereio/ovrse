@@ -8,8 +8,8 @@
   "low_count": 0,
   "kev_count": 3,
   "with_fix_count": 4,
-  "last_updated": "2026-02-16T00:31:51.701032+00:00",
-  "expires_at": "2026-02-16T04:31:51.701032+00:00",
+  "last_updated": "2026-02-16T12:31:26.848634+00:00",
+  "expires_at": "2026-02-16T16:31:26.848634+00:00",
   "cves": [
     {
       "cve_id": "CVE-2025-11953",
@@ -21,10 +21,10 @@
       "has_fix": true,
       "fix_version": "20.1.1",
       "packages": [
-        "react_native_community_cli",
         "@react-native-community/cli",
         "@react-native-community/cli-server-api",
-        "cli"
+        "cli",
+        "react_native_community_cli"
       ],
       "published_date": "2025-11-03T17:15:32.677000+00:00",
       "kev_date_added": "2026-02-05T00:00:00",
@@ -41,14 +41,14 @@
       "has_fix": true,
       "fix_version": "10.1.8",
       "packages": [
-        "napi-postinstall",
-        "eslint-plugin-prettier",
         "pkgr\\/core",
+        "homarr",
+        "napi-postinstall",
         "synckit",
+        "got-fetch",
         "@pkgr/core",
         "eslint-config-prettier",
-        "homarr",
-        "got-fetch"
+        "eslint-plugin-prettier"
       ],
       "published_date": "2025-07-19T17:15:23.733000+00:00",
       "kev_date_added": "2026-01-22T00:00:00",
@@ -92,10 +92,6 @@
   ],
   "top_packages": [
     {
-      "package": "react_native_community_cli",
-      "count": 1
-    },
-    {
       "package": "@react-native-community/cli",
       "count": 1
     },
@@ -108,11 +104,7 @@
       "count": 1
     },
     {
-      "package": "napi-postinstall",
-      "count": 1
-    },
-    {
-      "package": "eslint-plugin-prettier",
+      "package": "react_native_community_cli",
       "count": 1
     },
     {
@@ -120,15 +112,23 @@
       "count": 1
     },
     {
+      "package": "homarr",
+      "count": 1
+    },
+    {
+      "package": "napi-postinstall",
+      "count": 1
+    },
+    {
       "package": "synckit",
       "count": 1
     },
     {
-      "package": "@pkgr/core",
+      "package": "got-fetch",
       "count": 1
     },
     {
-      "package": "eslint-config-prettier",
+      "package": "@pkgr/core",
       "count": 1
     }
   ]
