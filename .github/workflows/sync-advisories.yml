@@ -11,10 +11,6 @@ on:
         required: false
         default: 'all'
 
-permissions:
-  contents: write
-  pull-requests: write
-
 env:
   DEFAULT_ECOSYSTEMS: 'npm pypi go maven cargo gem'
 
@@ -24,6 +20,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate App Token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -134,8 +137,7 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.APPROVE_PAT }}
-          # Use fixed branch name so PR gets updated, not duplicated
+          token: ${{ steps.app-token.outputs.token }}
           branch: chore/sync-advisories
           delete-branch: true
           title: 'chore: sync advisories'
@@ -146,7 +148,6 @@ jobs:
 
             This PR only modifies files in `advisories/` folder.
           commit-message: 'chore: sync advisories ${{ steps.summary.outputs.summary }}'
-          # Only commit changes in advisories/ folder
           add-paths: |
             advisories/
           labels: advisory, automated
