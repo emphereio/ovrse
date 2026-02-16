@@ -8,8 +8,8 @@
   "low_count": 0,
   "kev_count": 3,
   "with_fix_count": 6,
-  "last_updated": "2026-02-15T16:32:14.461298+00:00",
-  "expires_at": "2026-02-15T20:32:14.461298+00:00",
+  "last_updated": "2026-02-15T20:31:39.779156+00:00",
+  "expires_at": "2026-02-16T00:31:39.779156+00:00",
   "cves": [
     {
       "cve_id": "CVE-2025-11953",
@@ -21,10 +21,10 @@
       "has_fix": true,
       "fix_version": "20.1.1",
       "packages": [
-        "@react-native-community/cli",
+        "@react-native-community/cli-server-api",
         "react_native_community_cli",
-        "cli",
-        "@react-native-community/cli-server-api"
+        "@react-native-community/cli",
+        "cli"
       ],
       "published_date": "2025-11-03T17:15:32.677000+00:00",
       "kev_date_added": "2026-02-05T00:00:00",
@@ -41,14 +41,14 @@
       "has_fix": true,
       "fix_version": "10.1.8",
       "packages": [
-        "eslint-config-prettier",
-        "napi-postinstall",
-        "@pkgr/core",
-        "got-fetch",
-        "pkgr\\/core",
         "eslint-plugin-prettier",
         "homarr",
-        "synckit"
+        "got-fetch",
+        "napi-postinstall",
+        "synckit",
+        "@pkgr/core",
+        "pkgr\\/core",
+        "eslint-config-prettier"
       ],
       "published_date": "2025-07-19T17:15:23.733000+00:00",
       "kev_date_added": "2026-01-22T00:00:00",
@@ -82,16 +82,16 @@
       "has_fix": true,
       "fix_version": "4.17.23",
       "packages": [
-        "lodash.update",
-        "lodash-rails",
-        "lodash.updatewith",
-        "lodash-es",
-        "lodash.pick",
-        "banking_credit_facilities_process_management",
         "banking_corporate_lending_process_management",
-        "lodash.setwith",
+        "lodash",
+        "lodash-es",
+        "banking_credit_facilities_process_management",
+        "lodash.pick",
+        "lodash-rails",
         "lodash.set",
-        "lodash"
+        "lodash.updatewith",
+        "lodash.setwith",
+        "lodash.update"
       ],
       "published_date": null,
       "kev_date_added": null,
@@ -135,7 +135,7 @@
   ],
   "top_packages": [
     {
-      "package": "@react-native-community/cli",
+      "package": "@react-native-community/cli-server-api",
       "count": 1
     },
     {
@@ -143,23 +143,19 @@
       "count": 1
     },
     {
+      "package": "@react-native-community/cli",
+      "count": 1
+    },
+    {
       "package": "cli",
       "count": 1
     },
     {
-      "package": "@react-native-community/cli-server-api",
+      "package": "eslint-plugin-prettier",
       "count": 1
     },
     {
-      "package": "eslint-config-prettier",
-      "count": 1
-    },
-    {
-      "package": "napi-postinstall",
-      "count": 1
-    },
-    {
-      "package": "@pkgr/core",
+      "package": "homarr",
       "count": 1
     },
     {
@@ -167,11 +163,15 @@
       "count": 1
     },
     {
-      "package": "pkgr\\/core",
+      "package": "napi-postinstall",
       "count": 1
     },
     {
-      "package": "eslint-plugin-prettier",
+      "package": "synckit",
+      "count": 1
+    },
+    {
+      "package": "@pkgr/core",
       "count": 1
     }
   ]

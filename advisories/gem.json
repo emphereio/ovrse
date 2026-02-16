@@ -8,8 +8,8 @@
   "low_count": 0,
   "kev_count": 0,
   "with_fix_count": 1,
-  "last_updated": "2026-02-15T16:32:15.937613+00:00",
-  "expires_at": "2026-02-15T20:32:15.937613+00:00",
+  "last_updated": "2026-02-15T20:31:41.051370+00:00",
+  "expires_at": "2026-02-16T00:31:41.051370+00:00",
   "cves": [
     {
       "cve_id": "CVE-2025-25291",
@@ -22,9 +22,9 @@
       "fix_version": "unknown",
       "packages": [
         "storagegrid",
-        "omniauth-saml",
+        "omniauth_saml",
         "ruby-saml",
-        "omniauth_saml"
+        "omniauth-saml"
       ],
       "published_date": null,
       "kev_date_added": null,
@@ -38,7 +38,7 @@
       "count": 1
     },
     {
-      "package": "omniauth-saml",
+      "package": "omniauth_saml",
       "count": 1
     },
     {
@@ -46,7 +46,7 @@
       "count": 1
     },
     {
-      "package": "omniauth_saml",
+      "package": "omniauth-saml",
       "count": 1
     }
   ]
