@@ -1,15 +1,15 @@
 {
   "ecosystem": "npm",
   "window": "30d",
-  "total_cves": 6,
+  "total_cves": 4,
   "critical_count": 2,
-  "high_count": 2,
-  "medium_count": 2,
+  "high_count": 1,
+  "medium_count": 1,
   "low_count": 0,
   "kev_count": 3,
-  "with_fix_count": 6,
-  "last_updated": "2026-02-15T16:32:14.461298+00:00",
-  "expires_at": "2026-02-15T20:32:14.461298+00:00",
+  "with_fix_count": 4,
+  "last_updated": "2026-02-16T00:31:51.701032+00:00",
+  "expires_at": "2026-02-16T04:31:51.701032+00:00",
   "cves": [
     {
       "cve_id": "CVE-2025-11953",
@@ -21,10 +21,10 @@
       "has_fix": true,
       "fix_version": "20.1.1",
       "packages": [
-        "@react-native-community/cli",
         "react_native_community_cli",
-        "cli",
-        "@react-native-community/cli-server-api"
+        "@react-native-community/cli",
+        "@react-native-community/cli-server-api",
+        "cli"
       ],
       "published_date": "2025-11-03T17:15:32.677000+00:00",
       "kev_date_added": "2026-02-05T00:00:00",
@@ -41,14 +41,14 @@
       "has_fix": true,
       "fix_version": "10.1.8",
       "packages": [
-        "eslint-config-prettier",
         "napi-postinstall",
-        "@pkgr/core",
-        "got-fetch",
-        "pkgr\\/core",
         "eslint-plugin-prettier",
+        "pkgr\\/core",
+        "synckit",
+        "@pkgr/core",
+        "eslint-config-prettier",
         "homarr",
-        "synckit"
+        "got-fetch"
       ],
       "published_date": "2025-07-19T17:15:23.733000+00:00",
       "kev_date_added": "2026-01-22T00:00:00",
@@ -73,49 +73,6 @@
       "priority_score": 92.4895
     },
     {
-      "cve_id": "CVE-2020-8203",
-      "summary": "Medium-priority lodash security patch available but requires careful testing due to major version breaking changes.",
-      "severity": "high",
-      "cvss_score": 7.4,
-      "epss_percentile": 0.86939,
-      "kev_listed": false,
-      "has_fix": true,
-      "fix_version": "4.17.23",
-      "packages": [
-        "lodash.update",
-        "lodash-rails",
-        "lodash.updatewith",
-        "lodash-es",
-        "lodash.pick",
-        "banking_credit_facilities_process_management",
-        "banking_corporate_lending_process_management",
-        "lodash.setwith",
-        "lodash.set",
-        "lodash"
-      ],
-      "published_date": null,
-      "kev_date_added": null,
-      "added_to_advisory": "2026-02-14T00:31:51.171434+00:00",
-      "priority_score": 42.1817
-    },
-    {
-      "cve_id": "CVE-2024-43788",
-      "summary": "Webpack security fix available with stability risks - patch with thorough testing.",
-      "severity": "medium",
-      "cvss_score": 6.4,
-      "epss_percentile": 0.82269,
-      "kev_listed": false,
-      "has_fix": true,
-      "fix_version": "5.105.0",
-      "packages": [
-        "webpack"
-      ],
-      "published_date": null,
-      "kev_date_added": null,
-      "added_to_advisory": "2026-02-14T00:31:51.171459+00:00",
-      "priority_score": 39.2807
-    },
-    {
       "cve_id": "CVE-2026-25115",
       "summary": "Critical container escape vulnerability in n8n requires immediate patching, but major version upgrade needs careful migration planning.",
       "severity": "critical",
@@ -135,15 +92,11 @@
   ],
   "top_packages": [
     {
-      "package": "@react-native-community/cli",
-      "count": 1
-    },
-    {
       "package": "react_native_community_cli",
       "count": 1
     },
     {
-      "package": "cli",
+      "package": "@react-native-community/cli",
       "count": 1
     },
     {
@@ -151,7 +104,7 @@
       "count": 1
     },
     {
-      "package": "eslint-config-prettier",
+      "package": "cli",
       "count": 1
     },
     {
@@ -159,11 +112,7 @@
       "count": 1
     },
     {
-      "package": "@pkgr/core",
-      "count": 1
-    },
-    {
-      "package": "got-fetch",
+      "package": "eslint-plugin-prettier",
       "count": 1
     },
     {
@@ -171,7 +120,15 @@
       "count": 1
     },
     {
-      "package": "eslint-plugin-prettier",
+      "package": "synckit",
+      "count": 1
+    },
+    {
+      "package": "@pkgr/core",
+      "count": 1
+    },
+    {
+      "package": "eslint-config-prettier",
       "count": 1
     }
   ]
