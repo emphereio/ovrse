@@ -533,7 +533,7 @@ func TestResolveCVEIDMocked(t *testing.T) {
 	t.Run("first CVE alias wins", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(osvVulnerability{
+			_ = json.NewEncoder(w).Encode(osvVulnerability{
 				ID:      "GHSA-multi",
 				Aliases: []string{"CVE-2023-11111", "CVE-2023-22222"},
 			})
@@ -554,7 +554,7 @@ func TestResolveCVEIDMocked(t *testing.T) {
 	t.Run("empty aliases list", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(osvVulnerability{
+			_ = json.NewEncoder(w).Encode(osvVulnerability{
 				ID:      "GHSA-no-aliases",
 				Aliases: []string{},
 			})
@@ -608,7 +608,7 @@ func (c *testOSVClient) ResolveCVEID(ctx context.Context, vulnID string) (string
 	if err != nil {
 		return vulnID, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return vulnID, nil

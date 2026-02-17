@@ -25,7 +25,7 @@ func FuzzCompareSemver(f *testing.F) {
 			}
 		}()
 		// Should not panic
-		CompareSemver(v1, v2)
+		_, _ = CompareSemver(v1, v2)
 	})
 }
 
@@ -45,7 +45,7 @@ func FuzzComparePEP440(f *testing.F) {
 				t.Errorf("panic with inputs %q, %q: %v", v1, v2, r)
 			}
 		}()
-		ComparePEP440(v1, v2)
+		_, _ = ComparePEP440(v1, v2)
 	})
 }
 
@@ -65,7 +65,7 @@ func FuzzCompareDebian(f *testing.F) {
 				t.Errorf("panic with inputs %q, %q: %v", v1, v2, r)
 			}
 		}()
-		CompareDebian(v1, v2)
+		_, _ = CompareDebian(v1, v2)
 	})
 }
 
@@ -85,7 +85,7 @@ func FuzzCompareRPM(f *testing.F) {
 				t.Errorf("panic with inputs %q, %q: %v", v1, v2, r)
 			}
 		}()
-		CompareRPM(v1, v2)
+		_, _ = CompareRPM(v1, v2)
 	})
 }
 
@@ -104,7 +104,7 @@ func FuzzCompareAlpine(f *testing.F) {
 				t.Errorf("panic with inputs %q, %q: %v", v1, v2, r)
 			}
 		}()
-		CompareAlpine(v1, v2)
+		_, _ = CompareAlpine(v1, v2)
 	})
 }
 
@@ -124,7 +124,7 @@ func FuzzCompareMaven(f *testing.F) {
 				t.Errorf("panic with inputs %q, %q: %v", v1, v2, r)
 			}
 		}()
-		CompareMaven(v1, v2)
+		_, _ = CompareMaven(v1, v2)
 	})
 }
 
@@ -143,7 +143,7 @@ func FuzzCompareGeneric(f *testing.F) {
 				t.Errorf("panic with inputs %q, %q: %v", v1, v2, r)
 			}
 		}()
-		CompareGeneric(v1, v2)
+		_, _ = CompareGeneric(v1, v2)
 	})
 }
 
@@ -191,6 +191,6 @@ func FuzzCompare(f *testing.F) {
 		}()
 		// Constrain format to valid range
 		format := Format(formatInt % 8) // 7 formats + unknown
-		Compare(v1, v2, format)
+		_, _ = Compare(v1, v2, format)
 	})
 }

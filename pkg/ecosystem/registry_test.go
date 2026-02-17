@@ -273,7 +273,7 @@ func TestScanAll(t *testing.T) {
 
 	t.Run("partial failure succeeds with warning", func(t *testing.T) {
 		r := NewRegistry()
-		r.Register(&mockPlugin{
+		_ = r.Register(&mockPlugin{
 			name:       "failing",
 			priority:   100,
 			detectFunc: func(path string) bool { return true },
@@ -281,7 +281,7 @@ func TestScanAll(t *testing.T) {
 				return nil, context.Canceled
 			},
 		})
-		r.Register(&mockPlugin{
+		_ = r.Register(&mockPlugin{
 			name:       "succeeding",
 			priority:   90,
 			detectFunc: func(path string) bool { return true },
@@ -401,7 +401,7 @@ func TestConcurrentRegistryAccess(t *testing.T) {
 	// Register initial plugins
 	for i := 0; i < 5; i++ {
 		p := &mockPlugin{name: fmt.Sprintf("init-%d", i), priority: i * 10}
-		r.Register(p)
+		_ = r.Register(p)
 	}
 
 	done := make(chan bool)
@@ -424,7 +424,7 @@ func TestConcurrentRegistryAccess(t *testing.T) {
 		go func(n int) {
 			for j := 0; j < 10; j++ {
 				p := &mockPlugin{name: fmt.Sprintf("concurrent-%d-%d", n, j)}
-				r.Register(p) // May fail, that's ok
+				_ = r.Register(p) // May fail, that's ok
 			}
 			done <- true
 		}(i)
@@ -442,7 +442,7 @@ func TestConcurrentPluginOperations(t *testing.T) {
 	ctx := context.Background()
 
 	// Register a plugin with scan function
-	r.Register(&mockPlugin{
+	_ = r.Register(&mockPlugin{
 		name:       "concurrent-scan",
 		detectFunc: func(path string) bool { return true },
 		scanFunc: func(path string) (*ScanResult, error) {

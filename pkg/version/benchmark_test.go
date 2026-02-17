@@ -65,7 +65,7 @@ func BenchmarkCompareAlpine(b *testing.B) {
 	v2 := "2.4.62-r10"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareAlpine(v1, v2)
+		_, _ = CompareAlpine(v1, v2)
 	}
 }
 
@@ -74,7 +74,7 @@ func BenchmarkCompareMaven(b *testing.B) {
 	v2 := "1.0.0-RELEASE"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareMaven(v1, v2)
+		_, _ = CompareMaven(v1, v2)
 	}
 }
 
@@ -83,7 +83,7 @@ func BenchmarkCompareGeneric(b *testing.B) {
 	v2 := "1.2.3.4.6"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareGeneric(v1, v2)
+		_, _ = CompareGeneric(v1, v2)
 	}
 }
 
@@ -112,7 +112,7 @@ func BenchmarkCompareUnified(b *testing.B) {
 	v2 := "2.0.0"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Compare(v1, v2, SemverFormat)
+		_, _ = Compare(v1, v2, SemverFormat)
 	}
 }
 
@@ -132,7 +132,7 @@ func BenchmarkInRange(b *testing.B) {
 	fixed := "2.0.0"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		InRange(version, introduced, fixed, SemverFormat)
+		_, _ = InRange(version, introduced, fixed, SemverFormat)
 	}
 }
 
@@ -142,7 +142,7 @@ func BenchmarkCompareLongVersion(b *testing.B) {
 	v2 := "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareGeneric(v1, v2)
+		_, _ = CompareGeneric(v1, v2)
 	}
 }
 
@@ -151,7 +151,7 @@ func BenchmarkNewSemVer(b *testing.B) {
 	v := "1.0.0-alpha.1+build.123"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewSemVer(v)
+		_, _ = NewSemVer(v)
 	}
 }
 

@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	ecosystem.Register(&Plugin{})
+	_ = ecosystem.Register(&Plugin{})
 }
 
 // Plugin implements the Go ecosystem.

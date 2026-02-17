@@ -74,7 +74,7 @@ func (k *Keypair) savePrivateKey(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create private key file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if err := pem.Encode(file, block); err != nil {
 		return fmt.Errorf("failed to encode private key: %w", err)
@@ -99,7 +99,7 @@ func (k *Keypair) savePublicKey(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create public key file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if err := pem.Encode(file, block); err != nil {
 		return fmt.Errorf("failed to encode public key: %w", err)
