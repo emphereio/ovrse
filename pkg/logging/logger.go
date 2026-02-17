@@ -53,7 +53,7 @@ func Init(cfg Config) error {
 	}
 
 	// Configure output
-	var output io.Writer = cfg.Output
+	output := cfg.Output
 	if output == nil {
 		output = os.Stderr
 	}
