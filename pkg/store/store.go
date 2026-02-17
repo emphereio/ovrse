@@ -10,6 +10,8 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/emphereio/ovrse/pkg/logging"
 )
 
 // Store provides SQLite storage for Overseer data.
@@ -44,6 +46,8 @@ func DefaultDBPath() (string, error) {
 // New creates a new Store with the given database path.
 // If dbPath is empty, uses the default path.
 func New(dbPath string) (*Store, error) {
+	logger := logging.WithComponent("store")
+
 	if dbPath == "" {
 		var err error
 		dbPath, err = DefaultDBPath()
@@ -51,6 +55,8 @@ func New(dbPath string) (*Store, error) {
 			return nil, err
 		}
 	}
+
+	logger.Debug().Str("path", dbPath).Msg("opening database")
 
 	// Ensure parent directory exists
 	dir := filepath.Dir(dbPath)
@@ -61,12 +67,14 @@ func New(dbPath string) (*Store, error) {
 	// Open database with WAL mode for better concurrency
 	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_foreign_keys=ON")
 	if err != nil {
+		logger.Error().Err(err).Str("path", dbPath).Msg("failed to open database")
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
 	// Test connection
 	if err := db.Ping(); err != nil {
 		_ = db.Close()
+		logger.Error().Err(err).Msg("failed to connect to database")
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
@@ -75,9 +83,11 @@ func New(dbPath string) (*Store, error) {
 	// Initialize schema
 	if err := s.initSchema(); err != nil {
 		_ = db.Close()
+		logger.Error().Err(err).Msg("failed to initialize schema")
 		return nil, fmt.Errorf("failed to initialize schema: %w", err)
 	}
 
+	logger.Debug().Msg("database initialized successfully")
 	return s, nil
 }
 

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/emphereio/ovrse/pkg/ecosystem"
+	"github.com/emphereio/ovrse/pkg/logging"
 )
 
 func init() {
@@ -45,11 +46,15 @@ func (p *Plugin) Detect(ctx context.Context, path string) bool {
 
 // Scan parses requirements.txt and checks for vulnerabilities.
 func (p *Plugin) Scan(ctx context.Context, path string) (*ecosystem.ScanResult, error) {
+	logger := logging.WithComponent("ecosystem.pip")
+	logger.Debug().Str("path", path).Msg("scanning pip project")
+
 	// Find all requirements files
 	reqFiles := findRequirementsFiles(path)
 	if len(reqFiles) == 0 {
 		return nil, fmt.Errorf("no requirements.txt files found")
 	}
+	logger.Debug().Int("files", len(reqFiles)).Msg("found requirements files")
 
 	var allPackages []ecosystem.Package
 	var parseErrors []string

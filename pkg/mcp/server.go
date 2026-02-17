@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/emphereio/ovrse/pkg/ecosystem"
+	"github.com/emphereio/ovrse/pkg/logging"
 	// Import plugins to register them
 	_ "github.com/emphereio/ovrse/pkg/ecosystem/golang"
 	_ "github.com/emphereio/ovrse/pkg/ecosystem/npm"
@@ -104,8 +105,12 @@ func (s *Server) registerTools() {
 }
 
 func (s *Server) handleScanProject(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	logger := logging.WithComponent("mcp")
+	logger.Info().Str("tool", "scan_project").Msg("handling request")
+
 	args, err := parseArgs[ScanProjectArgs](request)
 	if err != nil {
+		logger.Warn().Err(err).Msg("invalid arguments")
 		return errorResult(fmt.Errorf("invalid arguments: %w", err)), nil
 	}
 
@@ -187,6 +192,11 @@ func (s *Server) handleScanProject(ctx context.Context, request mcp.CallToolRequ
 		response.Warnings = append(response.Warnings,
 			fmt.Sprintf("scan failed for: %s", strings.Join(failedEcosystems, ", ")))
 	}
+
+	logger.Info().
+		Int("packages", response.TotalPackages).
+		Int("vulnerabilities", response.TotalVulns).
+		Msg("scan completed")
 
 	return jsonResult(response)
 }
@@ -302,12 +312,16 @@ func (s *Server) registerIntelTools() {
 
 // Intel tool handlers (delegate to intel client)
 func (s *Server) handleAnalyzeCVE(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	logger := logging.WithComponent("mcp")
+	logger.Info().Str("tool", "analyze_cve").Msg("handling request")
+
 	if s.intelClient == nil {
 		return errorResult(fmt.Errorf("intel-engine not configured")), nil
 	}
 
 	args, err := parseArgs[AnalyzeCVEArgs](request)
 	if err != nil {
+		logger.Warn().Err(err).Msg("invalid arguments")
 		return errorResult(fmt.Errorf("invalid arguments: %w", err)), nil
 	}
 

@@ -26,7 +26,7 @@ Advisories are synced from [Emphere Intel](https://emphere.dev) every 4 hours vi
 
 Each ecosystem file (`npm.json`, `pypi.json`, etc.) has the following structure:
 
-> **Note**: The counts (`total_cves`, `critical_count`, etc.) reflect CVEs that passed the gating thresholds—not all CVEs in the OVRSE knowledge base.
+> **Note**: The counts (`total_cves`, `critical_count`, etc.) reflect CVEs that passed the gating thresholds, not all CVEs in the OVRSE knowledge base.
 
 ```json
 {
@@ -62,7 +62,7 @@ Each ecosystem file (`npm.json`, `pypi.json`, etc.) has the following structure:
 
 ## Global Advisory Schema
 
-The `global.json` file has a different structure—it summarizes all ecosystems:
+The `global.json` file has a different structure. It summarizes all ecosystems:
 
 ```json
 {

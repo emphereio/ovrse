@@ -151,11 +151,11 @@ All CVEs age out after 30 days. This includes KEV-listed CVEs.
 **KEV aging**: KEV CVEs are included for 30 days from `kev_date_added`, then removed from the advisory even if still listed in the CISA KEV catalog. The full OVRSE KB retains the data; the advisory is a time-windowed view.
 
 **Why this design**:
-- Creates momentum—users must act within the window
+- Creates momentum, so users must act within the window
 - Keeps advisories tight and actionable (not a growing backlog)
 - Users who need historical data can use the API on-demand
 
-**Implementation note**: When CVEs are merged into an existing advisory, `added_to_advisory` is preserved for all CVEs (including KEV). This enforces the strict rolling window—CVEs cannot reset their expiry by being re-analyzed.
+**Implementation note**: When CVEs are merged into an existing advisory, `added_to_advisory` is preserved for all CVEs (including KEV). This enforces the strict rolling window, and CVEs cannot reset their expiry by being re-analyzed.
 
 ## Update Frequency
 
