@@ -68,7 +68,7 @@ func (c *OSVClient) CheckPackages(ctx context.Context, packages []Package) ([]Fi
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -262,7 +262,7 @@ func (c *OSVClient) CheckIfAffected(ctx context.Context, vulnID string, pkg Pack
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch vulnerability: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return &AffectedResult{
@@ -399,7 +399,7 @@ func (c *OSVClient) ResolveCVEID(ctx context.Context, vulnID string) (string, er
 	if err != nil {
 		return vulnID, fmt.Errorf("failed to fetch vulnerability: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotFound {
 		// Vulnerability not found in OSV - return original ID

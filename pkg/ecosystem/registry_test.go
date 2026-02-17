@@ -208,7 +208,7 @@ func TestScanAll(t *testing.T) {
 
 	t.Run("successful scan", func(t *testing.T) {
 		r := NewRegistry()
-		r.Register(&mockPlugin{
+		_ = r.Register(&mockPlugin{
 			name:       "npm",
 			detectFunc: func(path string) bool { return true },
 			scanFunc: func(path string) (*ScanResult, error) {
@@ -233,7 +233,7 @@ func TestScanAll(t *testing.T) {
 
 	t.Run("no matching plugins", func(t *testing.T) {
 		r := NewRegistry()
-		r.Register(&mockPlugin{
+		_ = r.Register(&mockPlugin{
 			name:       "npm",
 			detectFunc: func(path string) bool { return false },
 		})
@@ -246,7 +246,7 @@ func TestScanAll(t *testing.T) {
 
 	t.Run("all scans fail returns error", func(t *testing.T) {
 		r := NewRegistry()
-		r.Register(&mockPlugin{
+		_ = r.Register(&mockPlugin{
 			name:       "failing",
 			detectFunc: func(path string) bool { return true },
 			scanFunc: func(path string) (*ScanResult, error) {

@@ -417,7 +417,7 @@ func TestResolveCVEIDMocked(t *testing.T) {
 				t.Errorf("unexpected path: %s", r.URL.Path)
 			}
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(osvVulnerability{
+			_ = json.NewEncoder(w).Encode(osvVulnerability{
 				ID:      "GHSA-xxxx-yyyy-zzzz",
 				Aliases: []string{"CVE-2023-12345"},
 			})
@@ -437,7 +437,7 @@ func TestResolveCVEIDMocked(t *testing.T) {
 	t.Run("resolves PYSEC to CVE", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(osvVulnerability{
+			_ = json.NewEncoder(w).Encode(osvVulnerability{
 				ID:      "PYSEC-2024-123",
 				Aliases: []string{"CVE-2024-9999", "GHSA-aaaa-bbbb-cccc"},
 			})
@@ -457,7 +457,7 @@ func TestResolveCVEIDMocked(t *testing.T) {
 	t.Run("returns original if no CVE alias", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(osvVulnerability{
+			_ = json.NewEncoder(w).Encode(osvVulnerability{
 				ID:      "GHSA-no-cve",
 				Aliases: []string{"PYSEC-2024-001"}, // No CVE alias
 			})
@@ -519,7 +519,7 @@ func TestResolveCVEIDMocked(t *testing.T) {
 	t.Run("returns error on malformed JSON", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte("{invalid json"))
+			_, _ = w.Write([]byte("{invalid json"))
 		}))
 		defer server.Close()
 

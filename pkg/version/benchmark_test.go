@@ -38,7 +38,7 @@ func BenchmarkCompareDebian(b *testing.B) {
 	v2 := "1:2.3.5-1+deb12u2"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareDebian(v1, v2)
+		_, _ = CompareDebian(v1, v2)
 	}
 }
 
@@ -47,7 +47,7 @@ func BenchmarkCompareDebianTilde(b *testing.B) {
 	v2 := "1.0~alpha~2"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareDebian(v1, v2)
+		_, _ = CompareDebian(v1, v2)
 	}
 }
 
@@ -56,7 +56,7 @@ func BenchmarkCompareRPM(b *testing.B) {
 	v2 := "1:1.8.5-7.el8_6"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareRPM(v1, v2)
+		_, _ = CompareRPM(v1, v2)
 	}
 }
 

@@ -100,7 +100,7 @@ func TestHandleScanProjectBehavior(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		req := mcp.CallToolRequest{}
 		req.Params.Arguments = map[string]interface{}{
@@ -126,7 +126,7 @@ func TestHandleScanProjectBehavior(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		// Create a minimal package-lock.json
 		lockFile := filepath.Join(tmpDir, "package-lock.json")

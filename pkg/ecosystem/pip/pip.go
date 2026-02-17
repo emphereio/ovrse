@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	ecosystem.Register(&Plugin{})
+	_ = ecosystem.Register(&Plugin{})
 }
 
 // Plugin implements the pip ecosystem.
@@ -164,7 +164,7 @@ func findRequirementsFiles(path string) []string {
 	// Check requirements directory
 	reqDir := filepath.Join(path, "requirements")
 	if info, err := os.Stat(reqDir); err == nil && info.IsDir() {
-		filepath.Walk(reqDir, func(p string, info os.FileInfo, err error) error {
+		_ = filepath.Walk(reqDir, func(p string, info os.FileInfo, err error) error {
 			if err == nil && !info.IsDir() && strings.HasSuffix(p, ".txt") {
 				files = append(files, p)
 			}

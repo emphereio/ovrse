@@ -153,7 +153,7 @@ func TestPackageOperations(t *testing.T) {
 
 func TestVulnerabilityOperations(t *testing.T) {
 	store := setupTestStore(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Setup project and package
 	project, _ := store.AddProject("/test/project")
@@ -224,7 +224,7 @@ func TestVulnerabilityOperations(t *testing.T) {
 
 func TestScanOperations(t *testing.T) {
 	store := setupTestStore(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	project, _ := store.AddProject("/test/project")
 
@@ -258,7 +258,7 @@ func TestScanOperations(t *testing.T) {
 
 func TestProjectSummary(t *testing.T) {
 	store := setupTestStore(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Setup project, package, and vulnerability
 	project, _ := store.AddProject("/test/project")
