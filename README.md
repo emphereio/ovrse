@@ -83,7 +83,7 @@ Connect directly to the hosted MCP server. No installation required.
 {
   "mcpServers": {
     "ovrse": {
-      "url": "https://mcp.ovrse.dev"
+      "url": "https://mcp.emphere.dev/mcp/"
     }
   }
 }

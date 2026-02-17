@@ -168,7 +168,7 @@ Starts an MCP server that communicates over stdio. The server provides tools tha
 {
   "mcpServers": {
     "ovrse": {
-      "url": "https://mcp.ovrse.dev"
+      "url": "https://mcp.emphere.dev/mcp/"
     }
   }
 }

@@ -12,7 +12,7 @@ OVRSE is functional and actively used. The MCP server, CLI, and ecosystem plugin
 
 **Entry Points**
 - MCP server with 8 tools for AI assistant integration (Claude, Cursor, Windsurf)
-- Remote MCP at `https://mcp.ovrse.dev` (zero setup)
+- Remote MCP at `https://mcp.emphere.dev/mcp/` (zero setup)
 - Local MCP via `ovrse mcp` (privacy, offline)
 - CLI with `scan`, `mcp`, `validate`, `plan`, `plan-host` commands
 

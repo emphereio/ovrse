@@ -91,7 +91,7 @@ Or connect to the hosted remote MCP:
 ```json
 {
   "mcpServers": {
-    "ovrse": { "url": "https://mcp.ovrse.dev" }
+    "ovrse": { "url": "https://mcp.emphere.dev/mcp/" }
   }
 }
 ```
