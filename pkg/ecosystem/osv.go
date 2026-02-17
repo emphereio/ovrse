@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/emphereio/ovrse/pkg/logging"
 	"github.com/emphereio/ovrse/pkg/version"
 )
 
@@ -37,9 +38,14 @@ var DefaultOSVClient = NewOSVClient()
 
 // CheckPackages queries OSV for vulnerabilities affecting the given packages.
 func (c *OSVClient) CheckPackages(ctx context.Context, packages []Package) ([]Finding, error) {
+	logger := logging.WithComponent("osv")
+
 	if len(packages) == 0 {
 		return nil, nil
 	}
+
+	logger.Debug().Int("package_count", len(packages)).Msg("querying OSV batch API")
+	start := time.Now()
 
 	// Build batch query
 	queries := make([]osvQuery, len(packages))
@@ -101,6 +107,11 @@ func (c *OSVClient) CheckPackages(ctx context.Context, packages []Package) ([]Fi
 			Vulnerabilities: vulns,
 		})
 	}
+
+	logger.Debug().
+		Int("findings", len(findings)).
+		Dur("duration", time.Since(start)).
+		Msg("OSV query completed")
 
 	return findings, nil
 }

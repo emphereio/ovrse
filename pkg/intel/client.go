@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/emphereio/ovrse/pkg/auth"
+	"github.com/emphereio/ovrse/pkg/logging"
 )
 
 const (
@@ -177,7 +178,14 @@ func (c *Client) post(ctx context.Context, path string, body, result interface{}
 
 // doRequest performs an HTTP request with JWT authentication.
 func (c *Client) doRequest(ctx context.Context, method, path string, body, result interface{}) error {
+	logger := logging.WithComponent("intel")
 	url := c.baseURL + path
+	start := time.Now()
+
+	logger.Debug().
+		Str("method", method).
+		Str("path", path).
+		Msg("sending API request")
 
 	var reqBody io.Reader
 	if body != nil {
@@ -209,9 +217,15 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body, resul
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		logger.Error().Err(err).Str("path", path).Msg("request failed")
 		return fmt.Errorf("failed to send request: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
+
+	logger.Debug().
+		Int("status", resp.StatusCode).
+		Dur("duration", time.Since(start)).
+		Msg("received API response")
 
 	// Read response body
 	respBody, err := io.ReadAll(resp.Body)
@@ -221,6 +235,10 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body, resul
 
 	// Check for errors
 	if resp.StatusCode >= 400 {
+		logger.Warn().
+			Int("status", resp.StatusCode).
+			Str("path", path).
+			Msg("API error")
 		var apiErr APIError
 		if json.Unmarshal(respBody, &apiErr) == nil && (apiErr.Error != "" || apiErr.Detail != "") {
 			errMsg := apiErr.Error

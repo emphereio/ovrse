@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/emphereio/ovrse/pkg/ecosystem"
+	"github.com/emphereio/ovrse/pkg/logging"
 )
 
 func init() {
@@ -44,9 +45,13 @@ func (p *Plugin) Detect(ctx context.Context, path string) bool {
 
 // Scan parses package-lock.json and checks for vulnerabilities.
 func (p *Plugin) Scan(ctx context.Context, path string) (*ecosystem.ScanResult, error) {
+	logger := logging.WithComponent("ecosystem.npm")
+	logger.Debug().Str("path", path).Msg("scanning npm project")
+
 	lockFile := filepath.Join(path, "package-lock.json")
 	packages, err := parseLockFile(lockFile)
 	if err != nil {
+		logger.Error().Err(err).Str("lockfile", lockFile).Msg("failed to parse lock file")
 		return nil, fmt.Errorf("failed to parse lock file: %w", err)
 	}
 

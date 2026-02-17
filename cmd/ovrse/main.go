@@ -11,6 +11,7 @@ import (
 
 	"github.com/emphereio/ovrse/pkg/auth"
 	"github.com/emphereio/ovrse/pkg/ecosystem"
+	"github.com/emphereio/ovrse/pkg/logging"
 	// Import plugins to register them
 	_ "github.com/emphereio/ovrse/pkg/ecosystem/golang"
 	_ "github.com/emphereio/ovrse/pkg/ecosystem/npm"
@@ -25,13 +26,27 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Global logging flags
+var (
+	logLevel  string
+	logFormat string
+	logFile   string
+)
+
 func main() {
+	// Parse global logging flags before subcommand
+	parseGlobalFlags()
+
 	if len(os.Args) < 2 {
 		printUsage()
 		os.Exit(1)
 	}
 
 	cmd := os.Args[1]
+
+	// Initialize logger based on command
+	initLogger(cmd)
+
 	switch cmd {
 	// Security scanning commands
 	case "scan":
@@ -58,6 +73,69 @@ func main() {
 	}
 }
 
+// parseGlobalFlags extracts logging flags from os.Args before subcommand parsing.
+func parseGlobalFlags() {
+	var newArgs []string
+	i := 0
+	for i < len(os.Args) {
+		arg := os.Args[i]
+		switch {
+		case strings.HasPrefix(arg, "--log-level="):
+			logLevel = strings.TrimPrefix(arg, "--log-level=")
+		case arg == "--log-level" && i+1 < len(os.Args):
+			logLevel = os.Args[i+1]
+			i++ // skip next arg
+		case strings.HasPrefix(arg, "--log-format="):
+			logFormat = strings.TrimPrefix(arg, "--log-format=")
+		case arg == "--log-format" && i+1 < len(os.Args):
+			logFormat = os.Args[i+1]
+			i++
+		case strings.HasPrefix(arg, "--log-file="):
+			logFile = strings.TrimPrefix(arg, "--log-file=")
+		case arg == "--log-file" && i+1 < len(os.Args):
+			logFile = os.Args[i+1]
+			i++
+		default:
+			newArgs = append(newArgs, arg)
+		}
+		i++
+	}
+	os.Args = newArgs
+}
+
+// initLogger configures the global logger based on command and flags.
+func initLogger(cmd string) {
+	var cfg logging.Config
+
+	if cmd == "mcp" {
+		cfg = logging.DefaultMCPConfig()
+	} else {
+		cfg = logging.DefaultCLIConfig()
+	}
+
+	// Override with flags if provided
+	if logLevel != "" {
+		cfg.Level = logLevel
+	}
+	if logFormat != "" {
+		cfg.Format = logFormat
+	}
+	if logFile != "" {
+		cfg.FilePath = logFile
+	}
+
+	if err := logging.Init(cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+
+	logging.Logger.Debug().
+		Str("command", cmd).
+		Str("level", cfg.Level).
+		Str("format", cfg.Format).
+		Msg("logger initialized")
+}
+
 func printUsage() {
 	fmt.Println("OVRSE - Security scanning and remediation toolkit")
 	fmt.Println()
@@ -81,7 +159,7 @@ func printUsage() {
 
 func runScan(args []string) int {
 	fs := flag.NewFlagSet("scan", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs.SetOutput(os.Stderr)
 	path := fs.String("path", ".", "Path to project directory")
 	eco := fs.String("ecosystem", "", "Force specific ecosystem (npm, go, pip)")
 	outputJSON := fs.Bool("json", false, "Output as JSON")
@@ -101,6 +179,12 @@ func runScan(args []string) int {
 		fmt.Fprintf(os.Stderr, "invalid path: %v\n", err)
 		return 1
 	}
+
+	logging.Logger.Debug().
+		Str("path", absPath).
+		Str("ecosystem", *eco).
+		Bool("json", *outputJSON).
+		Msg("starting scan")
 
 	ctx := context.Background()
 
@@ -215,6 +299,11 @@ func runScan(args []string) int {
 
 	fmt.Printf("\nTotal: %d packages, %d vulnerabilities\n", totalPkgs, totalVulns)
 
+	logging.Logger.Info().
+		Int("packages", totalPkgs).
+		Int("vulnerabilities", totalVulns).
+		Msg("scan completed")
+
 	if totalVulns > 0 {
 		return 1 // Exit with error if vulnerabilities found
 	}
@@ -223,10 +312,12 @@ func runScan(args []string) int {
 
 func runMCP(args []string) int {
 	fs := flag.NewFlagSet("mcp", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs.SetOutput(os.Stderr) // Critical: MCP uses stdout for protocol, errors must go to stderr
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
+
+	logging.Logger.Info().Msg("starting MCP server")
 
 	// Initialize Intel client (optional - will work without it)
 	var intelClient *intel.Client
@@ -234,6 +325,9 @@ func runMCP(args []string) int {
 	keypair, err := auth.DefaultCredentials()
 	if err == nil {
 		intelClient = intel.NewClient(keypair)
+		logging.Logger.Debug().Msg("intel client initialized with credentials")
+	} else {
+		logging.Logger.Debug().Msg("running without intel client (no credentials)")
 	}
 
 	// Create MCP server
@@ -241,7 +335,10 @@ func runMCP(args []string) int {
 
 	// Start server on stdio
 	srv := server.NewStdioServer(mcpSrv.MCPServer())
+	logging.Logger.Info().Msg("MCP server listening on stdio")
+
 	if err := srv.Listen(context.Background(), os.Stdin, os.Stdout); err != nil {
+		logging.Logger.Error().Err(err).Msg("MCP server error")
 		fmt.Fprintf(os.Stderr, "server error: %v\n", err)
 		return 1
 	}
@@ -255,7 +352,7 @@ func runMCP(args []string) int {
 
 func runValidate(args []string) int {
 	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs.SetOutput(os.Stderr)
 	templateDir := fs.String("templates", filepath.Join("examples", "templates"), "Directory containing OVRS templates")
 	kbDir := fs.String("kb", filepath.Join("examples", "kb"), "Directory containing knowledge base YAML files")
 	if err := fs.Parse(args); err != nil {
@@ -313,7 +410,7 @@ func runValidate(args []string) int {
 
 func runPlan(args []string) int {
 	fs := flag.NewFlagSet("plan", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs.SetOutput(os.Stderr)
 	cve := fs.String("cve", "", "CVE identifier to plan for")
 	hostID := fs.String("host-id", "host-1", "Identifier for the host")
 	osFamily := fs.String("os-family", "", "Operating system family (e.g. debian)")
@@ -441,7 +538,7 @@ func runPlan(args []string) int {
 
 func runPlanHost(args []string) int {
 	fs := flag.NewFlagSet("plan-host", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs.SetOutput(os.Stderr)
 	hostFile := fs.String("host-file", "", "Path to JSON file describing the host inventory")
 	findingsFile := fs.String("findings-file", "", "Path to JSON file containing findings")
 	templateDir := fs.String("templates-dir", filepath.Join("examples", "templates"), "Directory containing OVRS templates")

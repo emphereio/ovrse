@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/emphereio/ovrse/pkg/ecosystem"
+	"github.com/emphereio/ovrse/pkg/logging"
 )
 
 func init() {
@@ -50,6 +51,9 @@ func (p *Plugin) Detect(ctx context.Context, path string) bool {
 
 // Scan parses go.sum and checks for vulnerabilities.
 func (p *Plugin) Scan(ctx context.Context, path string) (*ecosystem.ScanResult, error) {
+	logger := logging.WithComponent("ecosystem.go")
+	logger.Debug().Str("path", path).Msg("scanning go project")
+
 	goSum := filepath.Join(path, "go.sum")
 	packages, err := parseGoSum(goSum)
 	if err != nil {
@@ -57,8 +61,12 @@ func (p *Plugin) Scan(ctx context.Context, path string) (*ecosystem.ScanResult, 
 		goMod := filepath.Join(path, "go.mod")
 		packages, err = parseGoMod(goMod)
 		if err != nil {
+			logger.Error().Err(err).Msg("failed to parse go.sum or go.mod")
 			return nil, fmt.Errorf("failed to parse go.sum or go.mod: %w", err)
 		}
+		logger.Debug().Str("source", "go.mod").Int("packages", len(packages)).Msg("parsed dependencies")
+	} else {
+		logger.Debug().Str("source", "go.sum").Int("packages", len(packages)).Msg("parsed dependencies")
 	}
 
 	// Query OSV for vulnerabilities
