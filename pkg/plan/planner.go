@@ -3,6 +3,7 @@ package plan
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/emphereio/ovrse/pkg/inventory"
@@ -314,14 +315,18 @@ func compareNumericStrings(a, b string) int {
 }
 
 func parseInt(val string) (int, error) {
-	var n int
-	for i := 0; i < len(val); i++ {
-		if val[i] < '0' || val[i] > '9' {
-			return 0, fmt.Errorf("non digit")
-		}
-		n = n*10 + int(val[i]-'0')
+	if val == "" {
+		return 0, fmt.Errorf("empty string")
 	}
-	return n, nil
+	n, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	// Check for overflow when converting to int
+	if n > int64(^uint(0)>>1) || n < -int64(^uint(0)>>1)-1 {
+		return 0, fmt.Errorf("integer overflow: %d", n)
+	}
+	return int(n), nil
 }
 
 // computeFixedCVEsForPackage returns CVEs fixed by upgrading to targetVersion.
