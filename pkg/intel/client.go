@@ -7,14 +7,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/emphereio/ovrse/pkg/auth"
 )
 
 const (
-	// DefaultBaseURL is the default Intel-engine API endpoint.
-	DefaultBaseURL = "https://api.emphere.dev"
+	// DefaultBaseURL is the default Intel-engine MCP API endpoint.
+	// MCP routes are at mcp.emphere.dev/v1/* (not api.emphere.dev/v1/intel/*)
+	DefaultBaseURL = "https://mcp.emphere.dev"
 
 	// DefaultTimeout is the default HTTP request timeout.
 	DefaultTimeout = 30 * time.Second
@@ -25,6 +27,11 @@ type Client struct {
 	baseURL    string
 	httpClient *http.Client
 	keypair    *auth.Keypair
+
+	// JWT token caching (tokens valid 5 min, refresh 30s before expiry)
+	tokenMu     sync.RWMutex
+	cachedToken string
+	tokenExpiry time.Time
 }
 
 // ClientOption configures a Client.
@@ -71,7 +78,7 @@ func NewClient(keypair *auth.Keypair, opts ...ClientOption) *Client {
 // AnalyzeCVE performs full CVE analysis.
 func (c *Client) AnalyzeCVE(ctx context.Context, req *AnalyzeCVERequest) (*AnalyzeCVEResponse, error) {
 	var resp AnalyzeCVEResponse
-	err := c.post(ctx, "/v1/cve/analyze", req, &resp)
+	err := c.post(ctx, "/v1/analyze", req, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +88,7 @@ func (c *Client) AnalyzeCVE(ctx context.Context, req *AnalyzeCVERequest) (*Analy
 // GetCVEVerdict performs quick verdict lookup.
 func (c *Client) GetCVEVerdict(ctx context.Context, cveID string) (*VerdictResponse, error) {
 	var resp VerdictResponse
-	err := c.get(ctx, fmt.Sprintf("/v1/cve/%s/verdict", cveID), &resp)
+	err := c.get(ctx, fmt.Sprintf("/v1/verdict/%s", cveID), &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +99,7 @@ func (c *Client) GetCVEVerdict(ctx context.Context, cveID string) (*VerdictRespo
 func (c *Client) BatchTriage(ctx context.Context, cveIDs []string) (*BatchTriageResponse, error) {
 	req := &BatchTriageRequest{CVEIDs: cveIDs}
 	var resp BatchTriageResponse
-	err := c.post(ctx, "/v1/cve/batch-triage", req, &resp)
+	err := c.post(ctx, "/v1/batch-triage", req, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +109,7 @@ func (c *Client) BatchTriage(ctx context.Context, cveIDs []string) (*BatchTriage
 // CheckIfAffected checks if a specific version is affected by a CVE.
 func (c *Client) CheckIfAffected(ctx context.Context, req *CheckAffectedRequest) (*CheckAffectedResponse, error) {
 	var resp CheckAffectedResponse
-	err := c.post(ctx, "/v1/cve/check-affected", req, &resp)
+	err := c.post(ctx, "/v1/check-affected", req, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -110,13 +117,52 @@ func (c *Client) CheckIfAffected(ctx context.Context, req *CheckAffectedRequest)
 }
 
 // ReportOutcome reports the outcome of a remediation attempt.
+// Note: The intel-engine MCP endpoint is /v1/feedback (not report-outcome)
 func (c *Client) ReportOutcome(ctx context.Context, req *ReportOutcomeRequest) (*ReportOutcomeResponse, error) {
 	var resp ReportOutcomeResponse
-	err := c.post(ctx, "/v1/cve/report-outcome", req, &resp)
+	err := c.post(ctx, "/v1/feedback", req, &resp)
 	if err != nil {
 		return nil, err
 	}
 	return &resp, nil
+}
+
+// tokenRefreshBuffer is how long before expiry to refresh the token.
+const tokenRefreshBuffer = 30 * time.Second
+
+// getToken returns a valid JWT token, using cached value if still valid.
+func (c *Client) getToken() (string, error) {
+	if c.keypair == nil {
+		return "", nil
+	}
+
+	// Check if we have a valid cached token (with buffer before expiry)
+	c.tokenMu.RLock()
+	if c.cachedToken != "" && time.Now().Add(tokenRefreshBuffer).Before(c.tokenExpiry) {
+		token := c.cachedToken
+		c.tokenMu.RUnlock()
+		return token, nil
+	}
+	c.tokenMu.RUnlock()
+
+	// Generate new token
+	c.tokenMu.Lock()
+	defer c.tokenMu.Unlock()
+
+	// Double-check (another goroutine may have refreshed while we waited)
+	if c.cachedToken != "" && time.Now().Add(tokenRefreshBuffer).Before(c.tokenExpiry) {
+		return c.cachedToken, nil
+	}
+
+	token, err := c.keypair.SignJWT()
+	if err != nil {
+		return "", err
+	}
+
+	c.cachedToken = token
+	c.tokenExpiry = time.Now().Add(auth.TokenExpiry)
+
+	return token, nil
 }
 
 // get performs a GET request.
@@ -152,12 +198,12 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body, resul
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", "ovrse-cli/1.0")
 
-	// Add JWT authentication
-	if c.keypair != nil {
-		token, err := c.keypair.SignJWT()
-		if err != nil {
-			return fmt.Errorf("failed to sign JWT: %w", err)
-		}
+	// Add JWT authentication (uses cached token when valid)
+	token, err := c.getToken()
+	if err != nil {
+		return fmt.Errorf("failed to get JWT token: %w", err)
+	}
+	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
@@ -201,7 +247,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body, resul
 
 // Ping checks if the API is reachable.
 func (c *Client) Ping(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/health", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/v1/health", nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

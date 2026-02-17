@@ -24,8 +24,8 @@ func TestAnalyzeCVE(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
-		if r.URL.Path != "/v1/cve/analyze" {
-			t.Errorf("expected /v1/cve/analyze, got %s", r.URL.Path)
+		if r.URL.Path != "/v1/analyze" {
+			t.Errorf("expected /v1/analyze, got %s", r.URL.Path)
 		}
 		if r.Header.Get("Authorization") == "" {
 			t.Error("expected Authorization header")
@@ -40,13 +40,15 @@ func TestAnalyzeCVE(t *testing.T) {
 			t.Errorf("expected CVE-2021-44228, got %s", req.CVEID)
 		}
 
-		// Return response
+		// Return response matching intel-engine format
+		toVersion := "4.17.21"
 		resp := AnalyzeCVEResponse{
+			CVEID:      "CVE-2021-44228",
 			Action:     "fix_now",
 			CanAutoFix: true,
 			Fix: &FixInfo{
-				Command:    "npm install lodash@4.17.21",
-				FixVersion: "4.17.21",
+				Command:   "npm install lodash@4.17.21",
+				ToVersion: &toVersion,
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -72,6 +74,9 @@ func TestAnalyzeCVE(t *testing.T) {
 	if resp.Fix == nil || resp.Fix.Command == "" {
 		t.Error("expected fix command")
 	}
+	if resp.CVEID != "CVE-2021-44228" {
+		t.Errorf("expected cve_id CVE-2021-44228, got %s", resp.CVEID)
+	}
 }
 
 func TestGetCVEVerdict(t *testing.T) {
@@ -79,11 +84,12 @@ func TestGetCVEVerdict(t *testing.T) {
 		if r.Method != http.MethodGet {
 			t.Errorf("expected GET, got %s", r.Method)
 		}
-		if r.URL.Path != "/v1/cve/CVE-2021-44228/verdict" {
+		if r.URL.Path != "/v1/verdict/CVE-2021-44228" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
 
 		resp := VerdictResponse{
+			CVEID:   "CVE-2021-44228",
 			Verdict: "patch_immediately",
 			Cached:  true,
 		}
@@ -102,6 +108,9 @@ func TestGetCVEVerdict(t *testing.T) {
 	if resp.Verdict != "patch_immediately" {
 		t.Errorf("expected verdict patch_immediately, got %s", resp.Verdict)
 	}
+	if resp.CVEID != "CVE-2021-44228" {
+		t.Errorf("expected cve_id CVE-2021-44228, got %s", resp.CVEID)
+	}
 }
 
 func TestBatchTriage(t *testing.T) {
@@ -109,7 +118,7 @@ func TestBatchTriage(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
-		if r.URL.Path != "/v1/cve/batch-triage" {
+		if r.URL.Path != "/v1/batch-triage" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
 
@@ -118,10 +127,10 @@ func TestBatchTriage(t *testing.T) {
 
 		resp := BatchTriageResponse{
 			Summary: TriageSummary{
+				Total:            2,
 				PatchImmediately: 1,
-				Defer:            1,
 			},
-			Results: []VerdictResult{
+			Results: []VerdictResponse{
 				{CVEID: req.CVEIDs[0], Verdict: "patch_immediately"},
 				{CVEID: req.CVEIDs[1], Verdict: "defer"},
 			},
@@ -151,15 +160,22 @@ func TestCheckIfAffected(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
+		if r.URL.Path != "/v1/check-affected" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
 
 		var req CheckAffectedRequest
 		json.NewDecoder(r.Body).Decode(&req)
 
 		fixVersion := "4.17.21"
 		resp := CheckAffectedResponse{
-			Status:     "vulnerable",
-			Action:     "upgrade_recommended",
-			FixVersion: &fixVersion,
+			CVEID:          req.CVEID,
+			PackageName:    req.PackageName,
+			CurrentVersion: req.CurrentVersion,
+			Ecosystem:      req.Ecosystem,
+			Status:         "vulnerable",
+			Action:         "upgrade_recommended",
+			FixVersion:     &fixVersion,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
@@ -184,6 +200,9 @@ func TestCheckIfAffected(t *testing.T) {
 	if resp.FixVersion == nil || *resp.FixVersion != "4.17.21" {
 		t.Error("expected fix version 4.17.21")
 	}
+	if resp.CVEID != "CVE-2021-23337" {
+		t.Errorf("expected cve_id CVE-2021-23337, got %s", resp.CVEID)
+	}
 }
 
 func TestReportOutcome(t *testing.T) {
@@ -191,10 +210,22 @@ func TestReportOutcome(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
+		if r.URL.Path != "/v1/feedback" {
+			t.Errorf("expected /v1/feedback, got %s", r.URL.Path)
+		}
 
+		message := "Outcome recorded"
+		feedbackID := "fb_123"
+		cveID := "CVE-2021-23337"
+		pkgName := "lodash"
+		outcome := "success"
 		resp := ReportOutcomeResponse{
-			Success: true,
-			Message: "Outcome recorded",
+			Success:     true,
+			FeedbackID:  &feedbackID,
+			Message:     &message,
+			CVEID:       &cveID,
+			PackageName: &pkgName,
+			Outcome:     &outcome,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
@@ -217,6 +248,9 @@ func TestReportOutcome(t *testing.T) {
 
 	if !resp.Success {
 		t.Error("expected success to be true")
+	}
+	if resp.FeedbackID == nil || *resp.FeedbackID != "fb_123" {
+		t.Error("expected feedback_id fb_123")
 	}
 }
 
@@ -241,8 +275,8 @@ func TestAPIError(t *testing.T) {
 
 func TestPing(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/health" {
-			t.Errorf("expected /health, got %s", r.URL.Path)
+		if r.URL.Path != "/v1/health" {
+			t.Errorf("expected /v1/health, got %s", r.URL.Path)
 		}
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -269,5 +303,46 @@ func TestClientOptions(t *testing.T) {
 	c2 := NewClient(kp)
 	if c2.baseURL != DefaultBaseURL {
 		t.Errorf("expected default base URL %s, got %s", DefaultBaseURL, c2.baseURL)
+	}
+}
+
+func TestTokenCaching(t *testing.T) {
+	var tokensSeen []string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader != "" {
+			tokensSeen = append(tokensSeen, authHeader)
+		}
+
+		resp := VerdictResponse{
+			CVEID:   "CVE-2021-44228",
+			Verdict: "patch_immediately",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	client := NewClient(newTestKeypair(t), WithBaseURL(server.URL))
+
+	// Make multiple requests
+	for i := 0; i < 5; i++ {
+		_, err := client.GetCVEVerdict(context.Background(), "CVE-2021-44228")
+		if err != nil {
+			t.Fatalf("request %d failed: %v", i, err)
+		}
+	}
+
+	// All tokens should be the same (cached)
+	if len(tokensSeen) != 5 {
+		t.Fatalf("expected 5 tokens, got %d", len(tokensSeen))
+	}
+
+	firstToken := tokensSeen[0]
+	for i, token := range tokensSeen {
+		if token != firstToken {
+			t.Errorf("request %d used different token (caching failed)", i)
+		}
 	}
 }

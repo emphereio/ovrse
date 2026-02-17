@@ -3,16 +3,14 @@ module github.com/emphereio/ovrse
 go 1.24.6
 
 require (
-	github.com/fsnotify/fsnotify v1.9.0
+	github.com/Masterminds/semver/v3 v3.2.1
+	github.com/aquasecurity/go-pep440-version v0.0.1
 	github.com/mattn/go-sqlite3 v1.14.24
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/Masterminds/semver/v3 v3.2.1 // indirect
-	github.com/aquasecurity/go-pep440-version v0.0.1 // indirect
 	github.com/aquasecurity/go-version v0.0.1 // indirect
-	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 )
 
