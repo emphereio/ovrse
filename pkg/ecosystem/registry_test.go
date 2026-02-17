@@ -96,7 +96,7 @@ func TestRegister(t *testing.T) {
 func TestGet(t *testing.T) {
 	r := NewRegistry()
 	p := &mockPlugin{name: "myplug"}
-	r.Register(p)
+	_ = r.Register(p)
 
 	t.Run("existing plugin", func(t *testing.T) {
 		got, ok := r.Get("myplug")
@@ -154,14 +154,14 @@ func TestDetect(t *testing.T) {
 	ctx := context.Background()
 
 	// Register plugins that detect specific paths
-	r.Register(&mockPlugin{
+	_ = r.Register(&mockPlugin{
 		name:     "npm",
 		priority: 100,
 		detectFunc: func(path string) bool {
 			return path == "/project/npm" || path == "/project/both"
 		},
 	})
-	r.Register(&mockPlugin{
+	_ = r.Register(&mockPlugin{
 		name:     "go",
 		priority: 90,
 		detectFunc: func(path string) bool {
@@ -456,7 +456,7 @@ func TestConcurrentPluginOperations(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func() {
 			for j := 0; j < 50; j++ {
-				r.ScanAll(ctx, "/project")
+				_, _ = r.ScanAll(ctx, "/project")
 			}
 			done <- true
 		}()

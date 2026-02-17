@@ -52,7 +52,7 @@ func TestAnalyzeCVE(t *testing.T) {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -94,7 +94,7 @@ func TestGetCVEVerdict(t *testing.T) {
 			Cached:  true,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -123,7 +123,7 @@ func TestBatchTriage(t *testing.T) {
 		}
 
 		var req BatchTriageRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 
 		resp := BatchTriageResponse{
 			Summary: TriageSummary{
@@ -136,7 +136,7 @@ func TestBatchTriage(t *testing.T) {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -165,7 +165,7 @@ func TestCheckIfAffected(t *testing.T) {
 		}
 
 		var req CheckAffectedRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 
 		fixVersion := "4.17.21"
 		resp := CheckAffectedResponse{
@@ -178,7 +178,7 @@ func TestCheckIfAffected(t *testing.T) {
 			FixVersion:     &fixVersion,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -228,7 +228,7 @@ func TestReportOutcome(t *testing.T) {
 			Outcome:     &outcome,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -258,7 +258,7 @@ func TestAPIError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(APIError{
+		_ = json.NewEncoder(w).Encode(APIError{
 			Error:   "invalid_request",
 			Message: "CVE ID is required",
 		})
@@ -320,7 +320,7 @@ func TestTokenCaching(t *testing.T) {
 			Verdict: "patch_immediately",
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 

@@ -326,7 +326,7 @@ func TestMatchesPackage(t *testing.T) {
 
 func TestCheckPackagesEmpty(t *testing.T) {
 	client := NewOSVClient()
-	findings, err := client.CheckPackages(nil, []Package{})
+	findings, err := client.CheckPackages(context.Background(), []Package{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}

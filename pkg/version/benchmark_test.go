@@ -12,7 +12,7 @@ func BenchmarkCompareSemver(b *testing.B) {
 	v2 := "2.0.0-beta.2+build.456"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareSemver(v1, v2)
+		_, _ = CompareSemver(v1, v2)
 	}
 }
 
@@ -20,7 +20,7 @@ func BenchmarkCompareSemverEqual(b *testing.B) {
 	v := "1.0.0"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CompareSemver(v, v)
+		_, _ = CompareSemver(v, v)
 	}
 }
 
@@ -29,7 +29,7 @@ func BenchmarkComparePEP440(b *testing.B) {
 	v2 := "2.0.0b1.post2.dev2"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		ComparePEP440(v1, v2)
+		_, _ = ComparePEP440(v1, v2)
 	}
 }
 

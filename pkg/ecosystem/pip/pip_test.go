@@ -418,7 +418,7 @@ func TestScanParseErrorHandling(t *testing.T) {
 		}
 
 		// Cleanup: restore permissions so temp dir can be deleted
-		os.Chmod(unreadable, 0644)
+		_ = os.Chmod(unreadable, 0644)
 	})
 }
 

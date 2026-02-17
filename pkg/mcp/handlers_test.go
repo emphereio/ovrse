@@ -53,8 +53,8 @@ func TestHandleScanProjectBehavior(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp file: %v", err)
 		}
-		defer os.Remove(tmpFile.Name())
-		tmpFile.Close()
+		defer func() { _ = os.Remove(tmpFile.Name()) }()
+		_ = tmpFile.Close()
 
 		req := mcp.CallToolRequest{}
 		req.Params.Arguments = map[string]interface{}{
@@ -79,7 +79,7 @@ func TestHandleScanProjectBehavior(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		req := mcp.CallToolRequest{}
 		req.Params.Arguments = map[string]interface{}{

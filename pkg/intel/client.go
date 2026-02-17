@@ -211,7 +211,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body, resul
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Read response body
 	respBody, err := io.ReadAll(resp.Body)
@@ -256,7 +256,7 @@ func (c *Client) Ping(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to reach API: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("API returned status %d", resp.StatusCode)

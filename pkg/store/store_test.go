@@ -12,14 +12,14 @@ func TestNew(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	store, err := New(dbPath)
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	if store.Path() != dbPath {
 		t.Errorf("expected path %s, got %s", dbPath, store.Path())
@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 
 func TestProjectOperations(t *testing.T) {
 	store := setupTestStore(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Test AddProject
 	project, err := store.AddProject("/test/project")
@@ -91,7 +91,7 @@ func TestProjectOperations(t *testing.T) {
 
 func TestPackageOperations(t *testing.T) {
 	store := setupTestStore(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Add a project first
 	project, err := store.AddProject("/test/project")
@@ -268,12 +268,12 @@ func TestProjectSummary(t *testing.T) {
 		Version:   "4.17.15",
 		Ecosystem: "npm",
 	})
-	store.RecordVulnerability(Vulnerability{
+	_, _ = store.RecordVulnerability(Vulnerability{
 		PackageID: pkg.ID,
 		CVEID:     "CVE-2021-23337",
 		Severity:  SeverityHigh,
 	})
-	store.RecordVulnerability(Vulnerability{
+	_, _ = store.RecordVulnerability(Vulnerability{
 		PackageID: pkg.ID,
 		CVEID:     "CVE-2020-8203",
 		Severity:  SeverityCritical,
@@ -306,7 +306,7 @@ func setupTestStore(t *testing.T) *Store {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+	t.Cleanup(func() { _ = os.RemoveAll(tmpDir) })
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	store, err := New(dbPath)

@@ -66,7 +66,7 @@ func New(dbPath string) (*Store, error) {
 
 	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
@@ -74,7 +74,7 @@ func New(dbPath string) (*Store, error) {
 
 	// Initialize schema
 	if err := s.initSchema(); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("failed to initialize schema: %w", err)
 	}
 
@@ -217,7 +217,7 @@ func (s *Store) ListProjects() ([]Project, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list projects: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var projects []Project
 	for rows.Next() {
@@ -312,7 +312,7 @@ func (s *Store) GetPackagesByProject(projectID int64) ([]Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get packages: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var packages []Package
 	for rows.Next() {
@@ -429,7 +429,7 @@ func (s *Store) ListVulnerabilities(filter VulnFilter) ([]VulnResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list vulnerabilities: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []VulnResult
 	for rows.Next() {
@@ -609,7 +609,7 @@ func (s *Store) GetProjectSummary(projectID int64) (*ProjectSummary, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to count vulnerabilities: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var severity string
@@ -638,7 +638,7 @@ func (s *Store) GetOverallSummary() (map[string]int, int, error) {
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get summary: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var severity string
