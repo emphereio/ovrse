@@ -2,26 +2,8 @@
   "window": "30d",
   "total_cves": 5,
   "total_ecosystems": 6,
-  "last_updated": "2026-02-16T12:31:28.092422+00:00",
+  "last_updated": "2026-02-17T12:31:56.982689+00:00",
   "ecosystems": {
-    "gem": {
-      "ecosystem": "gem",
-      "total_cves": 1,
-      "critical_count": 1,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 1,
-      "last_updated": "2026-02-16T12:31:27.946849+00:00"
-    },
-    "go": {
-      "ecosystem": "go",
-      "total_cves": 0,
-      "critical_count": 0,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-02-16T12:31:27.421613+00:00"
-    },
     "npm": {
       "ecosystem": "npm",
       "total_cves": 4,
@@ -29,7 +11,7 @@
       "high_count": 1,
       "kev_count": 3,
       "with_fix_count": 4,
-      "last_updated": "2026-02-16T12:31:26.848634+00:00"
+      "last_updated": "2026-02-17T12:31:55.657107+00:00"
     },
     "pypi": {
       "ecosystem": "pypi",
@@ -38,7 +20,25 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-02-16T12:31:27.253633+00:00"
+      "last_updated": "2026-02-17T12:31:56.162770+00:00"
+    },
+    "go": {
+      "ecosystem": "go",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-02-17T12:31:56.313926+00:00"
+    },
+    "gem": {
+      "ecosystem": "gem",
+      "total_cves": 1,
+      "critical_count": 1,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 1,
+      "last_updated": "2026-02-17T12:31:56.818272+00:00"
     },
     "cargo": {
       "ecosystem": "cargo",
@@ -47,7 +47,7 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-02-16T12:31:27.795459+00:00"
+      "last_updated": "2026-02-17T12:31:56.671602+00:00"
     },
     "maven": {
       "ecosystem": "maven",
@@ -56,7 +56,7 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-02-16T12:31:27.624350+00:00"
+      "last_updated": "2026-02-17T12:31:56.493496+00:00"
     }
   },
   "top_critical": [
@@ -70,10 +70,10 @@
       "has_fix": true,
       "fix_version": "20.1.1",
       "packages": [
-        "@react-native-community/cli",
         "@react-native-community/cli-server-api",
-        "cli",
-        "react_native_community_cli"
+        "@react-native-community/cli",
+        "react_native_community_cli",
+        "cli"
       ],
       "published_date": "2025-11-03T17:15:32.677000+00:00",
       "kev_date_added": "2026-02-05T00:00:00",
@@ -90,14 +90,14 @@
       "has_fix": true,
       "fix_version": "10.1.8",
       "packages": [
-        "pkgr\\/core",
-        "homarr",
-        "napi-postinstall",
-        "synckit",
-        "got-fetch",
-        "@pkgr/core",
         "eslint-config-prettier",
-        "eslint-plugin-prettier"
+        "got-fetch",
+        "homarr",
+        "synckit",
+        "@pkgr/core",
+        "pkgr\\/core",
+        "eslint-plugin-prettier",
+        "napi-postinstall"
       ],
       "published_date": "2025-07-19T17:15:23.733000+00:00",
       "kev_date_added": "2026-01-22T00:00:00",
@@ -133,8 +133,8 @@
       "packages": [
         "ruby-saml",
         "omniauth-saml",
-        "omniauth_saml",
-        "storagegrid"
+        "storagegrid",
+        "omniauth_saml"
       ],
       "published_date": null,
       "kev_date_added": null,
