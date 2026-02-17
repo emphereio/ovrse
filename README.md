@@ -34,34 +34,40 @@
 
 ## Why OVRSE Exists
 
-The industry is very good at one half of the problem:
+Your scanner found 47 vulnerabilities. Now what?
 
-- We can **find** vulnerabilities (Trivy, Grype, Snyk, Wiz, cloud scanners...)
-- We can **name** them (CVE, NVD, CISA KEV, vendor advisories)
-- We can **track** them (Jira, ServiceNow, spreadsheets)
+You start researching. The first CVE says "upgrade to 4.17.21." But 4.19.0 is available—is that better? Safer? Does it introduce new issues? The GitHub release notes mention "breaking changes in 4.18" but not which ones. The NVD page links to a PR that was reverted. Someone on Reddit says the patch caused memory leaks. The maintainer closed the issue without commenting.
 
-But when someone asks a simple question:
+That was one CVE. You have 46 more.
 
-> *"For this CVE, on this system, what exactly should we do to fix it, how safe is that change, and what else will it fix?"*
+**The questions pile up:**
 
-...the real answer usually lives in:
+- *"What's the least breaking version that actually fixes this?"*
+- *"Is this patch stable, or are people reporting issues?"*
+- *"I have 15 CVEs across 8 packages—can I fix them with fewer upgrades?"*
+- *"Scanner says 2.3.4, but 2.5.0 exists. Is it safe? Any new CVEs?"*
+- *"What's the actual command? npm? yarn? pnpm?"*
+- *"This is a kernel CVE—does it need a reboot?"*
+- *"What about that OpenCLAW binary we installed? Any new issues?"*
+- *"Which of these are actually being exploited right now?"*
 
-- A wiki page that's out of date
-- A one-off script in a random repo
-- Someone's personal memory
-- Scanner-specific "fix" text that isn't reusable
+Enterprise teams pay for tools that answer these questions. Everyone else has browser tabs and Friday nights.
 
-**OVRSE exists to give that answer a shared, portable shape.**
+**Scanners find vulnerabilities. They don't fix them.**
 
-### What OVRSE Is
+OVRSE picks up where your scanner stops—turning "you have a vulnerability" into "here's exactly how to fix it, here's what could break, and here's the command."
+
+---
+
+## What OVRSE Is
 
 - **An open specification (OVRS)** for describing *how* to fix vulnerabilities
 - **A reference CLI** for scanning, planning, executing, and verifying fixes
 - **An MCP server** for AI-assisted remediation (Claude, Cursor, Windsurf)
-- **Pre-computed advisories** with risk prioritization (KEV, EPSS, CVSS)
+- **Remediation intelligence** aggregated from 15+ sources (NVD, OSV, GitHub, CISA KEV, EPSS, package registries, community signals)
 - **A pluggable ecosystem** for extending to any package manager
 
-### What OVRSE Is NOT
+## What OVRSE Is NOT
 
 - **Not a scanner** — Use existing tools (Trivy, Grype, Snyk). We sit downstream. We include lightweight lockfile scanning for convenience, but our focus is remediation intelligence.
 - **Not a vulnerability database** — We consume OSV, NVD, vendor feeds.
@@ -75,7 +81,7 @@ OVRSE is built AI-forward. The fastest way to use it is through the **MCP (Model
 
 ### Remote MCP — Zero Setup
 
-Connect directly to the hosted MCP server. No installation required.
+Connect directly to the hosted MCP server. No installation required. See [integration guides](https://emphere.com/mcp) for all supported clients.
 
 **Add to your Claude Desktop or Cursor config:**
 
@@ -382,5 +388,5 @@ Apache 2.0 — See [LICENSE](LICENSE).
 ---
 
 <p align="center">
-  <sub>Built by <a href="https://emphere.com">Emphere</a> • Open source, always</sub>
+  <sub>Built by <a href="https://emphere.com">Emphere</a></sub>
 </p>
