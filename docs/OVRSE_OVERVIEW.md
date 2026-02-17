@@ -8,7 +8,7 @@ OVRSE (Open Vulnerability Remediation Service / Engine) answers one question:
 
 ## What OVRSE Does
 
-OVRSE is designed to be **pluggable into existing scanning infrastructure**. Whether you use Trivy, Grype, Snyk, or custom tools—OVRSE connects to provide remediation intelligence:
+OVRSE is designed to be **pluggable into existing scanning infrastructure**. Whether you use Trivy, Grype, Snyk, or custom tools, OVRSE connects to provide remediation intelligence:
 
 | Input | OVRSE Provides |
 |-------|----------------|
@@ -187,10 +187,10 @@ spec:
 
 API client for remediation intelligence (breaking changes, stability, etc.):
 
-- `analyze_cve` — Full analysis with fix commands and safety signals
-- `get_cve_verdict` — Quick risk priority check
-- `batch_triage` — Triage multiple CVEs sorted by risk
-- `check_if_affected` — Version-specific vulnerability check
+- `analyze_cve`: Full analysis with fix commands and safety signals
+- `get_cve_verdict`: Quick risk priority check
+- `batch_triage`: Triage multiple CVEs sorted by risk
+- `check_if_affected`: Version-specific vulnerability check
 
 ---
 

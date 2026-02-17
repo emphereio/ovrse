@@ -1,6 +1,6 @@
 # OVRSE Roadmap
 
-Development roadmap for OVRSE — the open remediation layer for vulnerability management.
+Development roadmap for OVRSE, the open remediation layer for vulnerability management.
 
 ---
 
@@ -78,12 +78,12 @@ OVRSE is functional and actively used. The MCP server, CLI, and ecosystem plugin
 
 OVRSE will move to v1.0 when:
 
-1. **Spec Stability** — OVRS specification is frozen with backwards compatibility guarantees
-2. **Ecosystem Coverage** — At least 6 ecosystem plugins (npm, pip, go, maven, cargo, gem)
-3. **Template Library** — Templates for common OS families (Debian, RHEL, Alpine)
-4. **Test Coverage** — >70% coverage across core packages
-5. **Real-World Validation** — Used in production by multiple organizations
-6. **Release Automation** — Binaries, container images, and package manager distribution
+1. **Spec Stability**: OVRS specification is frozen with backwards compatibility guarantees
+2. **Ecosystem Coverage**: At least 6 ecosystem plugins (npm, pip, go, maven, cargo, gem)
+3. **Template Library**: Templates for common OS families (Debian, RHEL, Alpine)
+4. **Test Coverage**: >70% coverage across core packages
+5. **Real-World Validation**: Used in production by multiple organizations
+6. **Release Automation**: Binaries, container images, and package manager distribution
 
 ---
 
@@ -100,9 +100,9 @@ Define a stable output format for execution engines:
 ### Plan & Apply Workflow
 
 Terraform-style workflow for remediation:
-- `ovrse plan` — Generate remediation plan (dry-run)
-- `ovrse apply` — Execute remediation with confirmation
-- `ovrse verify` — Validate fix was applied correctly
+- `ovrse plan`: Generate remediation plan (dry-run)
+- `ovrse apply`: Execute remediation with confirmation
+- `ovrse verify`: Validate fix was applied correctly
 
 ### Broader Platform Coverage
 
@@ -121,11 +121,11 @@ Terraform-style workflow for remediation:
 
 ## How to Contribute
 
-1. **Ecosystem Plugins** — Add support for new package managers ([pkg/ecosystem/](../pkg/ecosystem/))
-2. **Templates** — Add remediation templates ([examples/templates/](../examples/templates/))
-3. **KB Entries** — Add CveMappings and PackageReleases ([examples/kb/](../examples/kb/))
-4. **MCP Tools** — Propose new tools for AI workflows
-5. **Documentation** — Improve guides and examples
+1. **Ecosystem Plugins**: Add support for new package managers ([pkg/ecosystem/](../pkg/ecosystem/))
+2. **Templates**: Add remediation templates ([examples/templates/](../examples/templates/))
+3. **KB Entries**: Add CveMappings and PackageReleases ([examples/kb/](../examples/kb/))
+4. **MCP Tools**: Propose new tools for AI workflows
+5. **Documentation**: Improve guides and examples
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
 

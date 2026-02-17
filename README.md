@@ -36,7 +36,7 @@
 
 Your scanner found 47 vulnerabilities. Now what?
 
-You start researching. The first CVE says "upgrade to 4.17.21." But 4.19.0 is available—is that better? Safer? Does it introduce new issues? The GitHub release notes mention "breaking changes in 4.18" but not which ones. The NVD page links to a PR that was reverted. Someone on Reddit says the patch caused memory leaks. The maintainer closed the issue without commenting.
+You start researching. The first CVE says "upgrade to 4.17.21." But 4.19.0 is available. Is that better? Safer? Does it introduce new issues? The GitHub release notes mention "breaking changes in 4.18" but not which ones. The NVD page links to a PR that was reverted. Someone on Reddit says the patch caused memory leaks. The maintainer closed the issue without commenting.
 
 That was one CVE. You have 46 more.
 
@@ -44,10 +44,10 @@ That was one CVE. You have 46 more.
 
 - *"What's the least breaking version that actually fixes this?"*
 - *"Is this patch stable, or are people reporting issues?"*
-- *"I have 15 CVEs across 8 packages—can I fix them with fewer upgrades?"*
+- *"I have 15 CVEs across 8 packages. Can I fix them with fewer upgrades?"*
 - *"Scanner says 2.3.4, but 2.5.0 exists. Is it safe? Any new CVEs?"*
 - *"What's the actual command? npm? yarn? pnpm?"*
-- *"This is a kernel CVE—does it need a reboot?"*
+- *"This is a kernel CVE. Does it need a reboot?"*
 - *"What about that OpenCLAW binary we installed? Any new issues?"*
 - *"Which of these are actually being exploited right now?"*
 
@@ -55,7 +55,7 @@ Enterprise teams pay for tools that answer these questions. Everyone else has br
 
 **Scanners find vulnerabilities. They don't fix them.**
 
-OVRSE picks up where your scanner stops—turning "you have a vulnerability" into "here's exactly how to fix it, here's what could break, and here's the command."
+OVRSE picks up where your scanner stops. It turns "you have a vulnerability" into "here is exactly how to fix it, what could break, and which command to run."
 
 ---
 
@@ -69,9 +69,9 @@ OVRSE picks up where your scanner stops—turning "you have a vulnerability" int
 
 ## What OVRSE Is NOT
 
-- **Not a scanner** — Use existing tools (Trivy, Grype, Snyk). We sit downstream. We include lightweight lockfile scanning for convenience, but our focus is remediation intelligence.
-- **Not a vulnerability database** — We consume OSV, NVD, vendor feeds.
-- **Not an orchestration layer** — No rollout strategies, approval workflows, or fleet management.
+- **Not a scanner**: Use existing tools (Trivy, Grype, Snyk). We sit downstream. We include lightweight lockfile scanning for convenience, but our focus is remediation intelligence.
+- **Not a vulnerability database**: We consume OSV, NVD, vendor feeds.
+- **Not an orchestration layer**: No rollout strategies, approval workflows, or fleet management.
 
 ---
 
@@ -79,7 +79,7 @@ OVRSE picks up where your scanner stops—turning "you have a vulnerability" int
 
 OVRSE is built AI-forward. The fastest way to use it is through the **MCP (Model Context Protocol)** server, which integrates with Claude, Cursor, Windsurf, and other AI assistants.
 
-### Remote MCP — Zero Setup
+### Remote MCP (Zero Setup)
 
 Connect directly to the hosted MCP server. No installation required. See [integration guides](https://emphere.com/mcp) for all supported clients.
 
@@ -104,7 +104,7 @@ Connect directly to the hosted MCP server. No installation required. See [integr
 
 The AI reads your local context and returns personalized remediation guidance with fix commands, breaking change warnings, and stability signals.
 
-### Local MCP — Privacy & Offline
+### Local MCP (Privacy and Offline)
 
 Run your own MCP server for full privacy and offline scanning.
 
@@ -383,7 +383,7 @@ For security vulnerabilities, see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Apache 2.0 — See [LICENSE](LICENSE).
+Apache 2.0. See [LICENSE](LICENSE).
 
 ---
 
