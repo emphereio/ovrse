@@ -127,7 +127,7 @@ func parseGoSum(path string) ([]ecosystem.Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var packages []ecosystem.Package
 	seen := make(map[string]bool)
@@ -173,7 +173,7 @@ func parseGoMod(path string) ([]ecosystem.Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var packages []ecosystem.Package
 	inRequire := false
