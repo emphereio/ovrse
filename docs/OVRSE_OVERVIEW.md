@@ -1,172 +1,304 @@
 # OVRSE Project Overview
 
-OVRSE (Open Vulnerability Remediation Service / Engine) is a small, focused project that tries to answer one question:
+OVRSE (Open Vulnerability Remediation Service / Engine) answers one question:
 
-> Given a vulnerable system and a set of CVEs, what is the **concrete, safe, repeatable plan** to fix them?
-
-It does not replace scanners. It does not decide what is vulnerable. It sits **downstream** of existing tools and standards such as OSV, CSAF and SBOM, and focuses on the **remediation** side:
-
-- How do I safely upgrade this package on this host?
-- What preflight checks should I perform?
-- How do I validate success and roll back if needed?
-- Which CVEs will this change actually fix?
-
-OVRSE is built around three core ideas:
-
-1. **Templates (OVRS)**  
-   Reusable remediation patterns that describe *how* to fix something:
-   - upgrade a package on Debian or RHEL
-   - harden a security group
-   - fix a storage bucket policy
-
-2. **Knowledge Base (KB)**  
-   Data that connects CVEs and package versions back to templates:
-   - “CVE-2025-1234 on Debian 12 nginx can be fixed by template `os.debian.package-upgrade.nginx` with target version `1.24.0`”
-   - “nginx 1.24.0 on Debian 12 fixes CVE-2025-1234, CVE-2025-5678 and CVE-2024-9999”
-
-3. **Planner and CLI**  
-   Logic that takes:
-   - a host (OS, packages, SBOM)
-   - a CVE or list of findings
-   - templates and KB
-   and produces:
-   - a **rendered plan** with concrete steps
-   - an explanation of which CVEs will be fixed
+> Given a vulnerability, what is the **concrete, safe, repeatable plan** to fix it?
 
 ---
 
-## High level data flow
+## What OVRSE Does
 
-```mermaid
-graph TD
-  A[Scanners / OSV / CSAF / Advisories] --> B[OVRSE KB]
-  C[Templates - OVRS YAML] --> D[Planner]
-  E[Inventory / SBOM] --> D
-  B --> D
-  D --> F[Rendered Plans]
-  G[ovrse CLI] --> D
-  F --> H[Execution Layer]
+OVRSE is designed to be **pluggable into existing scanning infrastructure**. Whether you use Trivy, Grype, Snyk, or custom tools—OVRSE connects to provide remediation intelligence:
+
+| Input | OVRSE Provides |
+|-------|----------------|
+| "CVE-2024-1234 found" | Fix version, upgrade command, breaking changes |
+| "Is lodash 4.17.15 vulnerable?" | Yes/no, affected ranges, fix version |
+| "Triage these 10 CVEs" | Risk-sorted list with KEV/EPSS/CVSS signals |
+| "Generate a fix plan" | Rendered steps, preflight checks, rollback |
+
+---
+
+## Architecture
+
+OVRSE has three main layers:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Entry Points                            │
+├─────────────────────────────────────────────────────────────────┤
+│  CLI (ovrse)          MCP Server            Advisories (JSON)   │
+│  - scan               - AI assistants       - Pre-computed      │
+│  - plan               - Claude/Cursor       - Risk-prioritized  │
+│  - validate           - Windsurf            - 6 ecosystems      │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        Core Engine                              │
+├─────────────────────────────────────────────────────────────────┤
+│  Ecosystem Plugins    OSV Client            Intel Client        │
+│  - npm                - Vulnerability       - analyze_cve       │
+│  - pip                  queries             - batch_triage      │
+│  - golang             - ID resolution       - check_affected    │
+│  - (extensible)       - Version ranges      - get_verdict       │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Knowledge Layer                             │
+├─────────────────────────────────────────────────────────────────┤
+│  OVRS Templates       Knowledge Base        Extensions          │
+│  - Remediation        - CVE mappings        - Breaking changes  │
+│    patterns           - Package releases    - Stability signals │
+│  - Preflight/steps    - Fix versions        - EPSS/KEV data     │
+│  - Validation         - Dependencies        - Regret index      │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-* **Upstream:** scanners and vuln feeds tell us *what* is vulnerable.
-* **OVRSE:** describes *how* to remediate and what the effect will be.
-* **Downstream:** execution engines actually apply the changes in real environments.
+---
+
+## Entry Points
+
+### 1. CLI (`ovrse`)
+
+The command-line interface for scanning and planning:
+
+```bash
+# Scan a project for vulnerabilities
+ovrse scan ./my-project
+
+# Generate a remediation plan
+ovrse plan --cve CVE-2024-1234 --os-family debian ...
+
+# Validate templates
+ovrse validate --templates-dir ./templates
+```
+
+See [CLI Reference](CLI_REFERENCE.md) for full documentation.
+
+### 2. MCP Server
+
+AI assistant integration via Model Context Protocol:
+
+```bash
+# Start local MCP server
+ovrse mcp
+```
+
+Or connect to the hosted remote MCP:
+
+```json
+{
+  "mcpServers": {
+    "ovrse": { "url": "https://mcp.ovrse.dev" }
+  }
+}
+```
+
+The MCP server exposes tools like `scan_project`, `analyze_cve`, `check_if_affected`, and `batch_triage` that AI assistants can invoke.
+
+### 3. Advisories
+
+Pre-computed, risk-prioritized CVE lists updated every 4 hours:
+
+```bash
+curl -s https://raw.githubusercontent.com/emphereio/ovrse/main/advisories/npm.json
+```
+
+See [Advisories README](../advisories/README.md) for schemas and usage.
 
 ---
 
-## Core concepts (short version)
+## Core Concepts
 
-See `spec/template-spec-v1.md` and `spec/kb-spec-v1.md` for full details. This is the quick mental model.
+### Ecosystem Plugins
 
-### Template (OVRS)
+Extensible parsers for package managers:
 
-A template is a YAML document that describes:
+| Plugin | Files | Ecosystem |
+|--------|-------|-----------|
+| npm | `package-lock.json` | npm, yarn, pnpm |
+| pip | `requirements.txt` | pip, poetry |
+| golang | `go.sum` | Go modules |
 
-* Where it applies (`match`):
+Plugins implement a common interface:
+- Parse lock files to extract packages
+- Query OSV for vulnerabilities
+- Generate fix commands for upgrades
 
-  * OS family, distribution, version range, required packages
-* What parameters it needs (`parameters`):
+### OVRS Templates
 
-  * package name, target version, service name, etc
-* What checks to run before changing anything (`preflight`)
-* Which steps to execute (`steps`)
-* How to validate success (`validation`)
-* How to roll back (`rollback`, optionally)
-* Remediation metadata (`remediation`):
+Reusable remediation patterns that describe *how* to fix something:
 
-  * risk level, requires reboot, expected duration
-
-Example:
-
-* `os.debian.package-upgrade.nginx`
-  “Upgrade nginx on Debian based hosts to a safe version with checks and rollback.”
+```yaml
+apiVersion: ovrs/v1
+kind: RemediationTemplate
+metadata:
+  id: os.debian.package-upgrade
+spec:
+  match:
+    osFamily: debian
+  parameters:
+    - name: targetPackage
+    - name: targetVersion
+  preflight:
+    - Check package manager is available
+  steps:
+    - apt-get update
+    - apt-get install {{ targetPackage }}={{ targetVersion }}
+  validation:
+    - Verify package version matches target
+```
 
 ### Knowledge Base (KB)
 
-Two main entity types:
+Data that connects CVEs to templates:
 
-* `CveMapping`  
-  Links a specific CVE to a template and parameter set, under certain conditions.
+**CveMapping:** Links a CVE to a template and parameters
+```yaml
+apiVersion: ovrs/v1
+kind: CveMapping
+metadata:
+  id: CVE-2024-1234-nginx
+spec:
+  cveId: CVE-2024-1234
+  templateRef: os.debian.package-upgrade
+  parameters:
+    targetPackage: nginx
+    targetVersion: "1.24.0"
+```
 
-  Example:  
-  “CVE-2025-1234 on Debian 12 nginx → template `os.debian.package-upgrade.nginx` with `targetVersion=1.24.0`.”
+**PackageRelease:** Describes which CVEs a version fixes
+```yaml
+apiVersion: ovrs/v1
+kind: PackageRelease
+metadata:
+  id: nginx-1.24.0-debian12
+spec:
+  package: nginx
+  version: "1.24.0"
+  fixesCves:
+    - CVE-2024-1234
+    - CVE-2024-5678
+```
 
-* `PackageRelease`  
-  Describes package versions and which CVEs they fix, in a given OS context.
+### Intel Client
 
-  Example:  
-  “On Debian 12, `nginx 1.24.0` fixes CVE-2025-1234, CVE-2025-5678, CVE-2024-9999.”
+API client for remediation intelligence (breaking changes, stability, etc.):
 
-The KB is populated from:
-
-* Public data (OSV, CSAF, vendor advisories)
-* Execution feedback (successful remediations observed by engines)
-* Manual or community contributions
-
-### Inventory
-
-A simple model of a host:
-
-* OS family, distribution, release, architecture
-* Installed packages and their versions
-
-Inventory can be derived from:
-
-* SBOM tools (e.g. Syft)
-* OS package managers
-* Cloud inventory APIs
-
-### Plan
-
-A **plan** is what the engine returns for a given CVE + host:
-
-* Which template is used
-* Concrete parameter values
-* Rendered preflight / steps / validation (placeholders resolved)
-* Which CVEs this action will fix if applied
-
-Plans are meant to be handed to an execution system, or inspected by a human.
+- `analyze_cve` — Full analysis with fix commands and safety signals
+- `get_cve_verdict` — Quick risk priority check
+- `batch_triage` — Triage multiple CVEs sorted by risk
+- `check_if_affected` — Version-specific vulnerability check
 
 ---
 
-## Repository layout (current)
+## Data Flow
 
-```text
-.
-├── README.md
-├── LICENSE
-├── spec/
-│   ├── README.md
-│   ├── template-spec-v1.md
-│   ├── kb-spec-v1.md
-│   └── ovrs-architecture.md     # <— see architecture reference
-├── docs/
-│   ├── OVRSE_OVERVIEW.md        # <— this file
-│   └── CLI_REFERENCE.md         # <— CLI reference
-├── examples/
-│   ├── templates/
-│   │   └── os.debian.package-upgrade.nginx.yaml
-│   └── kb/
-│       ├── cve-mapping-nginx.yaml
-│       └── package-release-nginx.yaml
-└── cmd/ovrse/
-    └── main.go
+### Scanning Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant Plugin
+    participant OSV
+
+    User->>CLI: ovrse scan ./project
+    CLI->>Plugin: Detect ecosystem, parse lock files
+    Plugin-->>CLI: Package list
+    CLI->>OSV: Query vulnerabilities
+    OSV-->>CLI: Vulnerability data
+    CLI-->>User: Findings report
+```
+
+### Planning Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant KB
+    participant Templates
+    participant Renderer
+
+    User->>CLI: ovrse plan --cve CVE-2024-1234
+    CLI->>KB: Find CveMapping for CVE
+    KB-->>CLI: Mapping + parameters
+    CLI->>Templates: Get referenced template
+    Templates-->>CLI: Template definition
+    CLI->>Renderer: Render with parameters
+    Renderer-->>CLI: Rendered plan
+    CLI-->>User: Remediation plan
 ```
 
 ---
 
-## How to read this project as a new engineer
+## Repository Layout
 
-1. Start with this file (`docs/OVRSE_OVERVIEW.md`) to understand intent.
-2. Read:
+```
+ovrse/
+├── cmd/ovrse/              # CLI entry point
+├── pkg/
+│   ├── ecosystem/          # Plugin system
+│   │   ├── registry.go     # Plugin registration
+│   │   ├── npm/            # npm plugin
+│   │   ├── pip/            # pip plugin
+│   │   └── golang/         # Go modules plugin
+│   ├── mcp/                # MCP server
+│   │   ├── server.go       # Server setup and tool registration
+│   │   └── common.go       # Shared utilities
+│   ├── intel/              # Intel API client
+│   │   ├── client.go       # HTTP client
+│   │   └── types.go        # Request/response types
+│   ├── auth/               # Authentication
+│   │   ├── keypair.go      # Ed25519 key management
+│   │   └── jwt.go          # JWT signing
+│   ├── ovrs/               # Template parser
+│   ├── kb/                 # Knowledge base loaders
+│   ├── plan/               # Remediation planner
+│   └── render/             # Template renderer
+├── spec/                   # OVRS Specification
+├── advisories/             # Pre-computed CVE lists
+├── examples/               # Example templates and KB
+├── docs/                   # Documentation
+└── schema/                 # JSON schemas
+```
 
-   * `spec/template-spec-v1.md` for the template shape
-   * `spec/kb-spec-v1.md` for KB entities
-3. Run:
+---
 
-   * `go run ./cmd/ovrse validate`
-   * `go run ./cmd/ovrse plan --help`
-4. Inspect the example template and KB files under `examples/`.
-5. Then move to the CLI reference in `docs/CLI_REFERENCE.md` and the architecture reference in `spec/ovrs-architecture.md`.
+## How to Read This Project
 
-From there you should be able to add new templates, extend the planner, or build integrations.
+### As a User
+
+1. Read the main [README](../README.md) for quick start
+2. Install: `go install github.com/emphereio/ovrse/cmd/ovrse@latest`
+3. Scan: `ovrse scan ./your-project`
+4. For AI integration, configure MCP client
+
+### As a Contributor
+
+1. Read this overview to understand architecture
+2. Read [CLI Reference](CLI_REFERENCE.md) for command details
+3. Read [OVRS Specification](../spec/README.md) for template format
+4. Look at `pkg/ecosystem/npm/` as a plugin example
+5. Run tests: `make test`
+
+### As an Integrator
+
+1. Use the MCP server for AI assistant integration
+2. Use the CLI with `--json` for machine-readable output
+3. Consume advisories directly from GitHub raw URLs
+4. See `pkg/intel/` for API client patterns
+
+---
+
+## What's Next
+
+See [ROADMAP.md](ROADMAP.md) for development plans:
+
+- More ecosystem plugins (Maven, Cargo, NuGet)
+- Template library expansion
+- JSON Schema validation
+- Integration guides for execution engines
