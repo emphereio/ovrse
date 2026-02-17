@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -8,10 +9,19 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/emphereio/ovrse/pkg/auth"
+	"github.com/emphereio/ovrse/pkg/ecosystem"
+	// Import plugins to register them
+	_ "github.com/emphereio/ovrse/pkg/ecosystem/golang"
+	_ "github.com/emphereio/ovrse/pkg/ecosystem/npm"
+	_ "github.com/emphereio/ovrse/pkg/ecosystem/pip"
+	"github.com/emphereio/ovrse/pkg/intel"
 	"github.com/emphereio/ovrse/pkg/inventory"
 	"github.com/emphereio/ovrse/pkg/kb"
+	mcpserver "github.com/emphereio/ovrse/pkg/mcp"
 	"github.com/emphereio/ovrse/pkg/ovrs"
 	"github.com/emphereio/ovrse/pkg/plan"
+	"github.com/mark3labs/mcp-go/server"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,14 +33,24 @@ func main() {
 
 	cmd := os.Args[1]
 	switch cmd {
+	// Security scanning commands
+	case "scan":
+		os.Exit(runScan(os.Args[2:]))
+	case "mcp":
+		os.Exit(runMCP(os.Args[2:]))
+
+	// OVRSE spec commands
 	case "validate":
 		os.Exit(runValidate(os.Args[2:]))
 	case "plan":
 		os.Exit(runPlan(os.Args[2:]))
 	case "plan-host":
 		os.Exit(runPlanHost(os.Args[2:]))
+
 	case "help", "-h", "--help":
 		printUsage()
+	case "version", "-v", "--version":
+		fmt.Printf("ovrse version %s\n", mcpserver.Version)
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command %q\n", cmd)
 		printUsage()
@@ -39,12 +59,199 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println("Usage: ovrse <command>")
-	fmt.Println("Commands:")
-	fmt.Println("  validate   Validate example templates and KB files")
-	fmt.Println("  plan       Generate a remediation plan for a single CVE and host")
-	fmt.Println("  plan-host  Generate remediation actions for a host with multiple findings")
+	fmt.Println("OVRSE - Security scanning and remediation toolkit")
+	fmt.Println()
+	fmt.Println("Usage: ovrse <command> [options]")
+	fmt.Println()
+	fmt.Println("Scanning Commands:")
+	fmt.Println("  scan       Scan a project for vulnerabilities")
+	fmt.Println("  mcp        Start MCP server (for AI assistants)")
+	fmt.Println()
+	fmt.Println("OVRSE Spec Commands:")
+	fmt.Println("  validate   Validate OVRS templates and KB files")
+	fmt.Println("  plan       Generate a remediation plan for a CVE")
+	fmt.Println("  plan-host  Generate remediation actions for a host")
+	fmt.Println()
+	fmt.Println("Run 'ovrse <command> --help' for more information.")
 }
+
+// ============================================================================
+// Scanning Commands (using ecosystem plugins)
+// ============================================================================
+
+func runScan(args []string) int {
+	fs := flag.NewFlagSet("scan", flag.ContinueOnError)
+	fs.SetOutput(os.Stdout)
+	path := fs.String("path", ".", "Path to project directory")
+	eco := fs.String("ecosystem", "", "Force specific ecosystem (npm, go, pip)")
+	outputJSON := fs.Bool("json", false, "Output as JSON")
+
+	if err := fs.Parse(args); err != nil {
+		return 2
+	}
+
+	// If positional arg provided, use it as path
+	if fs.NArg() > 0 {
+		*path = fs.Arg(0)
+	}
+
+	// Resolve to absolute path
+	absPath, err := filepath.Abs(*path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid path: %v\n", err)
+		return 1
+	}
+
+	ctx := context.Background()
+
+	var results []*ecosystem.ScanResult
+
+	if *eco != "" {
+		// Use specific plugin (normalize for registry lookup)
+		normalizedEco := ecosystem.NormalizeEcosystem(*eco)
+		plugin, ok := ecosystem.Get(normalizedEco)
+		if !ok {
+			fmt.Fprintf(os.Stderr, "unknown ecosystem: %s\n", *eco)
+			fmt.Fprintln(os.Stderr, "available ecosystems:")
+			for _, p := range ecosystem.List() {
+				fmt.Fprintf(os.Stderr, "  - %s (%s)\n", p.Info().Name, p.Info().DisplayName)
+			}
+			return 1
+		}
+		result, err := plugin.Scan(ctx, absPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "scan failed: %v\n", err)
+			return 1
+		}
+		results = append(results, result)
+	} else {
+		// Auto-detect ecosystems
+		plugins := ecosystem.Detect(ctx, absPath)
+		if len(plugins) == 0 {
+			fmt.Fprintf(os.Stderr, "no supported lock files found in %s\n", absPath)
+			fmt.Fprintln(os.Stderr, "supported files:")
+			for _, p := range ecosystem.List() {
+				for _, pattern := range p.Info().FilePatterns {
+					fmt.Fprintf(os.Stderr, "  - %s (%s)\n", pattern, p.Info().Name)
+				}
+			}
+			return 1
+		}
+
+		scanErrors := 0
+		for _, plugin := range plugins {
+			result, err := plugin.Scan(ctx, absPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "warning: %s scan failed: %v\n", plugin.Info().Name, err)
+				scanErrors++
+				continue
+			}
+			results = append(results, result)
+		}
+
+		// If all scans failed, exit with error
+		if scanErrors > 0 && len(results) == 0 {
+			fmt.Fprintf(os.Stderr, "error: all %d plugin scans failed\n", scanErrors)
+			return 1
+		}
+	}
+
+	// Count vulnerabilities for exit code
+	vulnCount := 0
+	for _, result := range results {
+		for _, finding := range result.Findings {
+			vulnCount += len(finding.Vulnerabilities)
+		}
+	}
+
+	if *outputJSON {
+		data, _ := json.MarshalIndent(results, "", "  ")
+		fmt.Println(string(data))
+		if vulnCount > 0 {
+			return 1 // Exit with error if vulnerabilities found
+		}
+		return 0
+	}
+
+	// Human-readable output
+	totalPkgs := 0
+	totalVulns := 0
+
+	for _, result := range results {
+		totalPkgs += result.PackagesScanned
+		fmt.Printf("\n[%s] Scanned %d packages\n", result.Ecosystem, result.PackagesScanned)
+
+		if len(result.Findings) == 0 {
+			fmt.Println("  No vulnerabilities found")
+			continue
+		}
+
+		for _, finding := range result.Findings {
+			for _, vuln := range finding.Vulnerabilities {
+				totalVulns++
+				severity := vuln.Severity
+				if severity == "" || severity == "UNKNOWN" {
+					severity = "?"
+				}
+
+				// Get CVE ID (prefer alias)
+				vulnID := vuln.ID
+				if len(vuln.Aliases) > 0 {
+					vulnID = vuln.Aliases[0]
+				}
+
+				fmt.Printf("  [%s] %s@%s - %s\n",
+					severity,
+					finding.Package.Name,
+					finding.Package.Version,
+					vulnID,
+				)
+				if vuln.FixVersion != "" {
+					fmt.Printf("         Fix: upgrade to %s\n", vuln.FixVersion)
+				}
+			}
+		}
+	}
+
+	fmt.Printf("\nTotal: %d packages, %d vulnerabilities\n", totalPkgs, totalVulns)
+
+	if totalVulns > 0 {
+		return 1 // Exit with error if vulnerabilities found
+	}
+	return 0
+}
+
+func runMCP(args []string) int {
+	fs := flag.NewFlagSet("mcp", flag.ContinueOnError)
+	fs.SetOutput(os.Stdout)
+	if err := fs.Parse(args); err != nil {
+		return 2
+	}
+
+	// Initialize Intel client (optional - will work without it)
+	var intelClient *intel.Client
+
+	keypair, err := auth.DefaultCredentials()
+	if err == nil {
+		intelClient = intel.NewClient(keypair)
+	}
+
+	// Create MCP server
+	mcpSrv := mcpserver.NewServer(intelClient)
+
+	// Start server on stdio
+	srv := server.NewStdioServer(mcpSrv.MCPServer())
+	if err := srv.Listen(context.Background(), os.Stdin, os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "server error: %v\n", err)
+		return 1
+	}
+
+	return 0
+}
+
+// ============================================================================
+// OVRSE Spec Commands (validate, plan, plan-host)
+// ============================================================================
 
 func runValidate(args []string) int {
 	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
@@ -321,6 +528,10 @@ func runPlanHost(args []string) int {
 
 	return 0
 }
+
+// ============================================================================
+// Helper functions
+// ============================================================================
 
 func reportErrors(kind, identifier, path string, errs []error) {
 	if identifier == "" {
