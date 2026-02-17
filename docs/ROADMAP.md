@@ -1,53 +1,89 @@
 # OVRSE Roadmap
 
-This document outlines the development roadmap for OVRSE.
+Development roadmap for OVRSE — the open remediation layer for vulnerability management.
 
 ---
 
-## Current Status: v0.1 (Draft)
+## Current Status: v0.2 (Pre-release)
 
-OVRSE is in early development. The core specification and reference implementation are functional but evolving.
+OVRSE is functional and actively used. The MCP server, CLI, and ecosystem plugins are production-ready for scanning and remediation intelligence workflows.
 
 ### What's Working
 
-- Core specification documents (template-spec-v1, kb-spec-v1, extensions-spec-v1)
-- RemediationTemplate, CveMapping, and PackageRelease document types
-- Extensions mechanism for attaching metadata to documents
-- Working CLI with `validate`, `plan`, and `plan-host` commands
+**Entry Points**
+- MCP server with 8 tools for AI assistant integration (Claude, Cursor, Windsurf)
+- Remote MCP at `https://mcp.emphere.dev/mcp/` (zero setup)
+- Local MCP via `ovrse mcp` (privacy, offline)
+- CLI with `scan`, `mcp`, `validate`, `plan`, `plan-host` commands
+
+**Core Engine**
+- Ecosystem plugins: npm, pip, Go modules
+- Auto-detection from lock files (`package-lock.json`, `requirements.txt`, `go.sum`)
+- OSV database queries for vulnerability data
+- Intel API client with Ed25519 keypair authentication
+- JWT token caching with automatic refresh
+
+**Intelligence Layer**
+- Pre-computed advisories for 6 ecosystems (npm, pypi, go, maven, cargo, gem)
+- Risk prioritization (CISA KEV, EPSS, CVSS)
+- Advisory sync every 4 hours
+
+**OVRS Specification**
+- RemediationTemplate, CveMapping, PackageRelease document types
+- Extensions mechanism for metadata
 - Template rendering with parameter substitution
-- Example templates and KB entries
+- JSON schemas in `schema/` directory
 
 ### Known Limitations
 
-- Limited content library (few templates and CVE mappings)
-- No JSON Schema validation yet
-- Basic version comparison logic
-- No formal integration tests
+- Limited template library (community contributions welcome)
+- Basic version comparison logic (semver only)
+- No formal integration test suite for CLI
+- Intel API requires authentication for full features
 
 ---
 
-## Near-Term Goals
+## v0.3 Goals
 
-### Content Library
+### Ecosystem Expansion
 
-- Expand template coverage:
-  - Generic Debian/Ubuntu/RHEL package upgrade templates
-  - Basic cloud remediation templates (AWS S3, Security Groups)
-- Seed KB with real CVE mappings from public sources (OSV, vendor advisories)
-- Add PackageRelease entries for common packages
+- [ ] Maven plugin (`pom.xml`, `gradle.lockfile`)
+- [ ] Cargo plugin (`Cargo.lock`)
+- [ ] RubyGems plugin (`Gemfile.lock`)
+- [ ] NuGet plugin (`packages.lock.json`)
 
-### Validation & Testing
+### Template Library
 
-- Add JSON Schemas for all document types
-- Integrate schema validation into loaders
-- Add integration tests with fixtures and golden outputs
-- Improve version comparison logic per ecosystem
+- [ ] Generic Debian/Ubuntu package upgrade templates
+- [ ] Generic RHEL/CentOS package upgrade templates
+- [ ] Cloud remediation templates (AWS S3, Security Groups)
+- [ ] Container image upgrade templates
+
+### Testing & Validation
+
+- [ ] CLI integration tests with fixtures
+- [ ] MCP tool integration tests
+- [ ] Golden output tests for plan generation
+- [ ] CI validation for template contributions
 
 ### Documentation
 
-- Integration guide for execution engines
-- Contribution guidelines (CONTRIBUTING.md)
-- More examples and tutorials
+- [ ] Integration guide for execution engines
+- [ ] MCP tool cookbook with common workflows
+- [ ] Template authoring guide
+
+---
+
+## v1.0 Criteria
+
+OVRSE will move to v1.0 when:
+
+1. **Spec Stability** — OVRS specification is frozen with backwards compatibility guarantees
+2. **Ecosystem Coverage** — At least 6 ecosystem plugins (npm, pip, go, maven, cargo, gem)
+3. **Template Library** — Templates for common OS families (Debian, RHEL, Alpine)
+4. **Test Coverage** — >70% coverage across core packages
+5. **Real-World Validation** — Used in production by multiple organizations
+6. **Release Automation** — Binaries, container images, and package manager distribution
 
 ---
 
@@ -55,41 +91,51 @@ OVRSE is in early development. The core specification and reference implementati
 
 ### ExecutionPlan Format
 
-Define a stable output format that execution engines can consume:
+Define a stable output format for execution engines:
 - Fully rendered steps with parameters resolved
 - Preflight checks and validation criteria
+- Rollback procedures
 - Metadata about CVEs fixed and provenance
 
-### Ecosystem Growth
+### Plan & Apply Workflow
 
-- CSAF ingestion tooling (parse advisories into OVRSE KB format)
-- Community contribution workflow
-- CI/CD for validating contributions
+Terraform-style workflow for remediation:
+- `ovrse plan` — Generate remediation plan (dry-run)
+- `ovrse apply` — Execute remediation with confirmation
+- `ovrse verify` — Validate fix was applied correctly
 
-### Broader Coverage
+### Broader Platform Coverage
 
 - More OS families (Alpine, Windows, macOS)
-- More cloud platforms (GCP, Azure)
-- Application-level ecosystems (npm, pip, Maven, Go modules)
+- Cloud platforms (AWS, GCP, Azure)
+- Container orchestration (Kubernetes, ECS)
+- Infrastructure as Code (Terraform, Pulumi)
+
+### CSAF Integration
+
+- Ingest CSAF advisories into OVRSE KB format
+- Vendor advisory mapping
+- Automated KB updates from upstream sources
 
 ---
 
 ## How to Contribute
 
-We welcome contributions in several areas:
+1. **Ecosystem Plugins** — Add support for new package managers ([pkg/ecosystem/](../pkg/ecosystem/))
+2. **Templates** — Add remediation templates ([examples/templates/](../examples/templates/))
+3. **KB Entries** — Add CveMappings and PackageReleases ([examples/kb/](../examples/kb/))
+4. **MCP Tools** — Propose new tools for AI workflows
+5. **Documentation** — Improve guides and examples
 
-1. **Templates**: Add remediation templates for new surfaces
-2. **KB Entries**: Add CveMappings and PackageReleases for real CVEs
-3. **Spec Improvements**: Propose clarifications or extensions to the spec
-4. **Engine Development**: Improve the planner, validation, or CLI
-
-See the main [README](../README.md) for contribution guidelines.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
 
 ---
 
 ## Versioning
 
-- **v0.x**: Active development, APIs may change
-- **v1.0**: Stable spec and reference implementation (target: TBD)
+| Version | Status | Commitment |
+|---------|--------|------------|
+| v0.x | Active development | APIs may change without notice |
+| v1.0 | Stable | Backwards-compatible within major version |
 
-We'll move to v1.0 once the spec is stable and has been validated by real-world usage.
+We follow [Semantic Versioning](https://semver.org/). Breaking changes in v0.x are documented in [CHANGELOG.md](../CHANGELOG.md).

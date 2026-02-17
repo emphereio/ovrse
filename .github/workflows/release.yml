@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            cc: aarch64-linux-gnu-gcc
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Linux cross-compiler
+        if: matrix.os == 'ubuntu-latest' && matrix.goarch == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+          CC: ${{ matrix.cc || 'gcc' }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          go build -ldflags "-X github.com/emphereio/ovrse/pkg/mcp.Version=${VERSION}" -o ovrse-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/ovrse
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ovrse-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: ovrse-${{ matrix.goos }}-${{ matrix.goarch }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Create archives
+        run: |
+          cd dist
+          for dir in */; do
+            name="${dir%/}"
+            chmod +x "$dir"/*
+            tar -czvf "${name}.tar.gz" -C "$dir" .
+          done
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum *.tar.gz > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/checksums.txt
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
