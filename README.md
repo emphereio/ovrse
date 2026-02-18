@@ -5,7 +5,7 @@
 <h1 align="center">OVRSE</h1>
 
 <p align="center">
-  <strong>The open remediation layer for vulnerability management</strong>
+  <strong>The open remediation layer for AI tools, so they fix vulnerabilities safely instead of running blind upgrades</strong>
 </p>
 
 <p align="center">
@@ -15,10 +15,12 @@
 </p>
 
 <p align="center">
-  <a href="#why-ovrse-exists">Why</a> •
-  <a href="#use-with-ai-assistants">AI Integration</a> •
-  <a href="#command-line-interface">CLI</a> •
-  <a href="#how-it-works">Architecture</a> •
+  <a href="#why">Why</a> •
+  <a href="#problem">Problem</a> •
+  <a href="#solution">Solution</a> •
+  <a href="#ai-integration">AI Integration</a> •
+  <a href="#cli">CLI</a> •
+  <a href="#architecture">Architecture</a> •
   <a href="#contributing">Contributing</a>
 </p>
 
@@ -26,13 +28,14 @@
 
 <p align="center">
   <a href="https://www.loom.com/share/4cd7882e1dfe4891a2c93bfabc82f82a">
-    <img src="https://cdn.loom.com/sessions/thumbnails/4cd7882e1dfe4891a2c93bfabc82f82a-e06994f471f64dc0-full-play.gif" alt="Watch: Automated Vulnerability Remediation with Claude" width="65%"/>
+    <img src="https://cdn.loom.com/sessions/thumbnails/4cd7882e1dfe4891a2c93bfabc82f82a-e06994f471f64dc0-full-play.gif" alt="Watch: Bounded AI Remediation with OVRSE + Claude" width="65%"/>
   </a>
 </p>
 
 ---
 
 ## Why OVRSE Exists
+<a id="why"></a>
 
 Your scanner found 47 vulnerabilities. Now what?
 
@@ -40,50 +43,124 @@ You start researching. The first CVE says "upgrade to 4.17.21." But 4.19.0 is av
 
 That was one CVE. You have 46 more.
 
-**The questions pile up:**
+The questions pile up:
 
 - *"What's the least breaking version that actually fixes this?"*
 - *"Is this patch stable, or are people reporting issues?"*
-- *"I have 15 CVEs across 8 packages. Can I fix them with fewer upgrades?"*
-- *"Scanner says 2.3.4, but 2.5.0 exists. Is it safe? Any new CVEs?"*
+- *"Scanner says upgrade to 2.3.4, but 2.5.0 exists. Is it safe?"*
 - *"What's the actual command? npm? yarn? pnpm?"*
-- *"This is a kernel CVE. Does it need a reboot?"*
-- *"What about that OpenCLAW binary we installed? Any new issues?"*
-- *"Which of these are actually being exploited right now?"*
+- *"Which of these 47 are actually being exploited right now?"*
 
 Enterprise teams pay for tools that answer these questions. Everyone else has browser tabs and Friday nights.
 
 **Scanners find vulnerabilities. They don't fix them.**
 
-OVRSE picks up where your scanner stops. It turns "you have a vulnerability" into "here is exactly how to fix it, what could break, and which command to run."
+---
+
+## The Problem
+<a id="problem"></a>
+
+Now AI is doing vulnerability remediation too. Faster than any human, but with the same blind spots.
+
+When you point an AI agent at a CVE, it does the obvious thing: upgrade to latest and move on. That's dangerous.
+
+- **Latest isn't always safe.** The newest version may introduce breaking changes, have reported instability, or pull in new CVEs.
+- **"Upgrade" isn't one decision.** There are often 3+ candidate versions. Picking the wrong one means shipping risk to clear a dashboard.
+- **AI doesn't know your constraints.** Change windows, reboot requirements, dependency chains, and ecosystem-specific quirks are not in the CVE advisory.
+
+AI moves faster than humans but makes the same mistakes. Without guardrails, every remediation is a guess executed at machine speed.
+
+**OVRSE is the guardrail.**
 
 ---
 
-## What OVRSE Is
+## How OVRSE Solves It
+<a id="solution"></a>
 
-- **An open specification (OVRS)** for describing *how* to fix vulnerabilities
-- **A reference CLI** for scanning, planning, executing, and verifying fixes
-- **An MCP server** for AI-assisted remediation (Claude, Cursor, Windsurf)
-- **Remediation intelligence** aggregated from 15+ sources (NVD, OSV, GitHub, CISA KEV, EPSS, package registries, community signals)
-- **A pluggable ecosystem** for extending to any package manager
+OVRSE is the layer between "you have a CVE" and "someone runs a command." It provides bounded remediation decisions so AI agents and humans can fix vulnerabilities within clear constraints.
 
-## What OVRSE Is NOT
+### Scanner In, Advisory-Guided Loop Out
 
-- **Not a scanner**: Use existing tools (Trivy, Grype, Snyk). We sit downstream. We include lightweight lockfile scanning for convenience, but our focus is remediation intelligence.
-- **Not a vulnerability database**: We consume OSV, NVD, vendor feeds.
-- **Not an orchestration layer**: No rollout strategies, approval workflows, or fleet management.
+OVRSE does not replace scanners. It consumes findings from your existing scanner and ecosystem tools, then combines them with OVRSE advisories to decide what matters now and how to fix it safely.
+
+**Scanner findings tell you what exists. Advisories tell you what's urgent. OVRSE turns both into safe execution.**
+
+```mermaid
+flowchart LR
+    subgraph INPUT [" "]
+        S["🔍 Scanner findings"]
+        A["📋 OVRSE advisories"]
+    end
+
+    subgraph OVRSE ["OVRSE Decision Layer"]
+        D{"Analyze & Prioritize"}
+        C["Generate fix commands"]
+    end
+
+    subgraph OUTPUT [" "]
+        E["⚡ Execute"]
+        R["📊 Report outcome"]
+    end
+
+    S --> D
+    A --> D
+    D --> C
+    C --> E
+    E --> R
+    R -.->|"feedback loop"| D
+
+    style OVRSE fill:#4a90a4,stroke:#2d5a6b,stroke-width:2px,color:#fff
+    style D fill:#3d7a8c,stroke:#2d5a6b,color:#fff
+    style C fill:#3d7a8c,stroke:#2d5a6b,color:#fff
+    style S fill:#6b8e23,stroke:#4a6b1a,color:#fff
+    style A fill:#6b8e23,stroke:#4a6b1a,color:#fff
+    style E fill:#cd853f,stroke:#8b5a2b,color:#fff
+    style R fill:#cd853f,stroke:#8b5a2b,color:#fff
+```
+
+### What OVRSE Controls
+
+| Boundary | What It Does |
+|----------|--------------|
+| **Version selection** | Recommends the least risky version that actually fixes the CVE, not just "latest" |
+| **Stability signals** | Aggregates community reports, maintainer activity, and regression data before recommending |
+| **Risk thresholds** | Weighs CISA KEV (actively exploited), EPSS (exploit probability), and CVSS to prioritize what matters |
+| **Breaking change warnings** | Flags known breakage between current and target versions before any upgrade runs |
+| **Ecosystem-aware commands** | Generates the exact fix command for your package manager (npm, pip, go) |
+| **Verification steps** | Provides preflight checks and post-fix validation so upgrades don't ship blind |
+
+### What OVRSE Is
+
+- **A remediation intelligence and guardrails layer**: the decision engine for safe vulnerability fixes
+- **An MCP server**: AI assistants (Claude, Cursor, Windsurf) call OVRSE for bounded remediation guidance
+- **A CLI**: humans get the same intelligence for manual workflows and CI/CD pipelines
+- **An open specification (OVRS)**: structured remediation knowledge that both AI and humans can consume
+- **Intelligence from multiple sources**: NVD, OSV, GitHub, CISA KEV, EPSS, package registries, and community signals
+
+### What OVRSE Is NOT
+
+- **Not a primary scanner.** OVRSE supports pluggable ecosystem adapters and integrates with existing scanner outputs. It sits downstream of detection.
+- **Not a vulnerability database.** We consume OSV, NVD, vendor feeds.
+- **Not an orchestration layer.** No rollout strategies or fleet management. OVRSE tells you *what* to do and *why it's safe*, not *when to deploy it*.
 
 ---
 
-## Use with AI Assistants
+## AI Integration (MCP)
+<a id="ai-integration"></a>
 
-OVRSE is built AI-forward. The fastest way to use it is through the **MCP (Model Context Protocol)** server, which integrates with Claude, Cursor, Windsurf, and other AI assistants.
+OVRSE is built for AI workflows. The primary interface is the **MCP (Model Context Protocol) server**, which gives assistants bounded access to remediation intelligence.
+
+**Instead of this:**
+> AI: *"There's a vulnerability in lodash. Upgrading to latest."*
+> `npm install lodash@latest` ← unverified, potentially breaking
+
+**You get this:**
+> AI + OVRSE: *"lodash 4.17.15 has 2 CVEs. Safest fix is 4.17.21. It is a minimal patch with no known breaking changes. 4.19.0 exists but has reported regressions."*
+> `npm install lodash@4.17.21` ← bounded, informed, safe
 
 ### Remote MCP (Zero Setup)
 
-Connect directly to the hosted MCP server. No installation required. See [integration guides](https://emphere.com/mcp) for all supported clients.
-
-**Add to your Claude Desktop or Cursor config:**
+Connect directly to the hosted server. No installation required.
 
 ```json
 {
@@ -102,22 +179,16 @@ Connect directly to the hosted MCP server. No installation required. See [integr
 - *"Triage these CVEs by risk: CVE-2024-1234, CVE-2024-5678"*
 - *"What breaks if I upgrade axios to 1.6.0?"*
 
-The AI reads your local context and returns personalized remediation guidance with fix commands, breaking change warnings, and stability signals.
-
 ### Local MCP (Privacy and Offline)
 
-Run your own MCP server for full privacy and offline scanning.
+Run your own MCP server for full privacy and air-gapped environments.
 
+**1. Install ovrse:**
 ```bash
-# Install
 go install github.com/emphereio/ovrse/cmd/ovrse@latest
-
-# Start MCP server
-ovrse mcp
 ```
 
-**Configure your client for local server:**
-
+**2. Add to Claude Code config** (`~/.claude.json`):
 ```json
 {
   "mcpServers": {
@@ -138,15 +209,16 @@ ovrse mcp
 | `analyze_cve` | Full analysis: fix commands, breaking changes, stability |
 | `get_cve_verdict` | Quick risk assessment for prioritization |
 | `batch_triage` | Triage multiple CVEs, sorted by risk |
-| `get_fix` | Get the exact upgrade command for a package |
+| `get_fix` | Get the exact bounded upgrade command for a package |
 | `list_ecosystems` | List available ecosystem plugins (npm, pip, go, etc.) |
-| `report_remediation_outcome` | Report fix success/failure for feedback loop |
+| `report_remediation_outcome` | Report fix success/failure for community feedback loop |
 
 ---
 
-## Command Line Interface
+## CLI
+<a id="cli"></a>
 
-For direct usage without AI assistants, OVRSE provides a full CLI.
+For manual workflows, CI/CD pipelines, and teams not yet using AI assistants, you get the same intelligence and boundaries.
 
 ### Installation
 
@@ -170,8 +242,6 @@ ovrse scan ./my-project
 ovrse scan --json ./my-project
 ```
 
-**Example output:**
-
 ```
 [npm] Scanned 2 packages
   [?] lodash@4.17.15 - GHSA-29mw-wpgm-hmr9
@@ -184,7 +254,6 @@ Total: 2 packages, 3 vulnerabilities
 ### Generate Remediation Plans
 
 ```bash
-# Plan remediation for a specific CVE
 ovrse plan --cve CVE-2024-1234 \
   --os-family debian --distribution debian \
   --release 12 --arch amd64 \
@@ -196,9 +265,8 @@ See [CLI Reference](docs/CLI_REFERENCE.md) for full documentation.
 
 ---
 
-## How It Works
-
-OVRSE connects vulnerability data sources to remediation intelligence:
+## Architecture
+<a id="architecture"></a>
 
 ```mermaid
 flowchart TB
@@ -227,9 +295,9 @@ flowchart TB
         end
     end
 
-    subgraph Output["Output"]
+    subgraph Output["Bounded Remediation"]
         PLAN["Remediation Plan<br/><small>Steps, preflight, validation</small>"]
-        FIX["Fix Commands<br/><small>npm install, pip install</small>"]
+        FIX["Safe Fix Commands<br/><small>Version-constrained upgrades</small>"]
         RISK["Risk Signals<br/><small>Breaking changes, stability</small>"]
     end
 
@@ -247,19 +315,31 @@ flowchart TB
 
 | Entry Point | Best For |
 |-------------|----------|
-| **MCP Server** | AI-assisted remediation with Claude/Cursor/Windsurf |
-| **CLI** | CI/CD pipelines, scripting, direct usage |
+| **MCP Server** | AI agents that need bounded remediation decisions |
+| **CLI** | Humans, CI/CD pipelines, scripting |
 | **Advisories** | Pre-computed CVE lists for monitoring dashboards |
 
 ### Data Flow
 
-1. **Scanners** detect vulnerabilities in your dependencies
-2. **OVRSE** enriches with remediation intelligence:
-   - Which version fixes it?
-   - What's the upgrade command?
-   - Are there breaking changes?
-   - Is the fix stable?
-3. **You decide** when and how to execute
+1. **Scanners and ecosystem tools** identify vulnerabilities in your codebase.
+2. **OVRSE advisories** add forward-looking urgency by ecosystem.
+3. **OVRSE** provides remediation intelligence within defined boundaries:
+  - Which version is the safest fix? (not just latest)
+  - What's the exact upgrade command?
+  - Are there breaking changes?
+  - Is the fix stable? What are people reporting?
+  - Is this CVE actively exploited?
+4. **AI or human** executes with confidence using guidance that is informed, constrained, and verifiable.
+
+---
+
+## The OVRS Specification
+
+OVRSE is powered by the **Open Vulnerability Remediation Specification (OVRS)**, a structured format for describing *how* to fix vulnerabilities, not just that they exist.
+
+OVRS is what makes remediation knowledge portable. It's the reason an AI agent and a human running the CLI get the same bounded, high-quality guidance.
+
+See [spec/README.md](spec/README.md) for the full specification.
 
 ---
 
@@ -273,7 +353,7 @@ flowchart TB
 
 **Coming soon:** Maven, Cargo, RubyGems, NuGet
 
-The plugin architecture makes it easy to add new ecosystems. See [pkg/ecosystem/](pkg/ecosystem/) for examples.
+The plugin architecture makes adding ecosystems straightforward. See [pkg/ecosystem/](pkg/ecosystem/) for examples.
 
 ---
 
@@ -282,11 +362,10 @@ The plugin architecture makes it easy to add new ecosystems. See [pkg/ecosystem/
 Pre-computed, risk-prioritized CVE lists updated every 4 hours.
 
 ```bash
-# Get npm advisory
 curl -s https://raw.githubusercontent.com/emphereio/ovrse/main/advisories/npm.json | jq '.cves[:3]'
 ```
 
-**Gating criteria:** A CVE is included if it meets ANY of:
+**Gating criteria**: a CVE is included if it meets any of:
 - Listed in CISA KEV (actively exploited)
 - EPSS percentile ≥ 50%
 - CVSS score ≥ 9.0
@@ -304,45 +383,7 @@ See [advisories/README.md](advisories/README.md) for schemas and usage.
 
 ---
 
-## Repository Structure
-
-```
-ovrse/
-├── cmd/ovrse/              # CLI entry point
-├── pkg/
-│   ├── ecosystem/          # Plugin system (npm, pip, go)
-│   ├── mcp/                # MCP server for AI assistants
-│   ├── intel/              # Intel API client
-│   ├── ovrs/               # OVRS template parser
-│   ├── kb/                 # Knowledge base loaders
-│   └── plan/               # Remediation planner
-├── spec/                   # OVRS Specification → spec/README.md
-├── advisories/             # Pre-computed CVE lists → advisories/README.md
-├── examples/               # Example templates and KB entries
-├── docs/                   # Documentation
-│   ├── CLI_REFERENCE.md    # Full CLI documentation
-│   ├── OVRSE_OVERVIEW.md   # Architecture deep-dive
-│   └── ROADMAP.md          # Development roadmap
-└── schema/                 # JSON schemas for validation
-```
-
----
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [CLI Reference](docs/CLI_REFERENCE.md) | Complete command documentation |
-| [Project Overview](docs/OVRSE_OVERVIEW.md) | Architecture, data flow, concepts |
-| [OVRS Specification](spec/README.md) | Template and KB format |
-| [Advisories](advisories/README.md) | Pre-computed CVE lists |
-| [Roadmap](docs/ROADMAP.md) | Development plans |
-
----
-
 ## Project Status
-
-**Current version:** v0.2 (pre-release)
 
 ### What Works
 - CLI: `scan`, `mcp`, `validate`, `plan`, `plan-host` commands
@@ -361,7 +402,20 @@ See [ROADMAP.md](docs/ROADMAP.md) for details.
 
 ---
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [CLI Reference](docs/CLI_REFERENCE.md) | Complete command documentation |
+| [Project Overview](docs/OVRSE_OVERVIEW.md) | Architecture, data flow, concepts |
+| [OVRS Specification](spec/README.md) | Template and KB format |
+| [Advisories](advisories/README.md) | Pre-computed CVE lists |
+| [Roadmap](docs/ROADMAP.md) | Development plans |
+
+---
+
 ## Contributing
+<a id="contributing"></a>
 
 We welcome contributions!
 

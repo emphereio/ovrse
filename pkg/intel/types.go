@@ -71,7 +71,7 @@ type AnalyzeCVEResponse struct {
 	RemediationType *string  `json:"remediation_type,omitempty"`
 	RequiresGUI     *bool    `json:"requires_gui,omitempty"`
 	RequiresReboot  *bool    `json:"requires_reboot,omitempty"`
-	AppliesTo       []string `json:"applies_to,omitempty"`
+	AppliesTo       *string  `json:"applies_to,omitempty"`
 
 	// Summaries
 	ExecutiveSummary *string `json:"executive_summary,omitempty"`
@@ -109,7 +109,7 @@ type RiskGlance struct {
 
 // AffectedPackage represents a package affected by the CVE.
 type AffectedPackage struct {
-	Package   string `json:"package"`
+	Name      string `json:"name"`
 	Ecosystem string `json:"ecosystem"`
 }
 
