@@ -385,8 +385,6 @@ See [advisories/README.md](advisories/README.md) for schemas and usage.
 
 ## Project Status
 
-**Current version:** v0.2 (pre-release)
-
 ### What Works
 - CLI: `scan`, `mcp`, `validate`, `plan`, `plan-host` commands
 - MCP server with 8 tools for AI assistants
