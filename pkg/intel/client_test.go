@@ -346,3 +346,29 @@ func TestTokenCaching(t *testing.T) {
 		}
 	}
 }
+
+func TestDefaultTimeout(t *testing.T) {
+	// Verify the default timeout is 180 seconds (for AI analysis that takes 30s-2min)
+	if DefaultTimeout != 180*1000000000 { // 180 seconds in nanoseconds
+		t.Errorf("expected DefaultTimeout to be 180s, got %v", DefaultTimeout)
+	}
+}
+
+func TestWithTimeout(t *testing.T) {
+	kp := newTestKeypair(t)
+
+	// Test WithTimeout option
+	client := NewClient(kp, WithTimeout(60*1000000000)) // 60 seconds
+	if client.httpClient.Timeout != 60*1000000000 {
+		t.Errorf("expected timeout 60s, got %v", client.httpClient.Timeout)
+	}
+}
+
+func TestNewClientUsesDefaultTimeout(t *testing.T) {
+	kp := newTestKeypair(t)
+	client := NewClient(kp)
+
+	if client.httpClient.Timeout != DefaultTimeout {
+		t.Errorf("expected client to use DefaultTimeout (%v), got %v", DefaultTimeout, client.httpClient.Timeout)
+	}
+}

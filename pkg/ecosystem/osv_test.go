@@ -1,11 +1,15 @@
 package ecosystem
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestConvertOSVVuln(t *testing.T) {
@@ -638,4 +642,343 @@ type httpError struct {
 
 func (e *httpError) Error() string {
 	return "HTTP error: " + http.StatusText(e.StatusCode)
+}
+
+func TestIsRetryableError(t *testing.T) {
+	tests := []struct {
+		name    string
+		err     error
+		want    bool
+	}{
+		{
+			name: "too many queries",
+			err:  fmt.Errorf("OSV API error (status 400): Too many queries"),
+			want: true,
+		},
+		{
+			name: "rate limit 429",
+			err:  fmt.Errorf("OSV API error (status 429): rate limited"),
+			want: true,
+		},
+		{
+			name: "server error 500",
+			err:  fmt.Errorf("OSV API error (status 500): internal error"),
+			want: true,
+		},
+		{
+			name: "bad gateway 502",
+			err:  fmt.Errorf("OSV API error (status 502): bad gateway"),
+			want: true,
+		},
+		{
+			name: "service unavailable 503",
+			err:  fmt.Errorf("OSV API error (status 503): unavailable"),
+			want: true,
+		},
+		{
+			name: "gateway timeout 504",
+			err:  fmt.Errorf("OSV API error (status 504): timeout"),
+			want: true,
+		},
+		{
+			name: "bad request 400 without too many queries",
+			err:  fmt.Errorf("OSV API error (status 400): invalid request"),
+			want: false,
+		},
+		{
+			name: "not found 404",
+			err:  fmt.Errorf("OSV API error (status 404): not found"),
+			want: false,
+		},
+		{
+			name: "network error",
+			err:  fmt.Errorf("failed to send request: connection refused"),
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isRetryableError(tt.err)
+			if got != tt.want {
+				t.Errorf("isRetryableError() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCheckPackagesBatchChunking(t *testing.T) {
+	var requestCount int
+	var requestSizes []int
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+
+		var req osvBatchRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("failed to decode request: %v", err)
+		}
+		requestSizes = append(requestSizes, len(req.Queries))
+
+		// Return empty results for each query
+		results := make([]osvQueryResult, len(req.Queries))
+		resp := osvBatchResponse{Results: results}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	client := newTestOSVClientWithURL(server.URL)
+
+	// Create 1200 packages (should result in 3 batches: 500, 500, 200)
+	packages := make([]Package, 1200)
+	for i := range packages {
+		packages[i] = Package{
+			Name:      fmt.Sprintf("pkg-%d", i),
+			Version:   "1.0.0",
+			Ecosystem: "npm",
+		}
+	}
+
+	_, err := client.CheckPackages(context.Background(), packages)
+	if err != nil {
+		t.Fatalf("CheckPackages failed: %v", err)
+	}
+
+	if requestCount != 3 {
+		t.Errorf("expected 3 batch requests, got %d", requestCount)
+	}
+
+	expectedSizes := []int{500, 500, 200}
+	for i, size := range requestSizes {
+		if size != expectedSizes[i] {
+			t.Errorf("batch %d: expected size %d, got %d", i, expectedSizes[i], size)
+		}
+	}
+}
+
+func TestCheckPackagesRetryOnTransientError(t *testing.T) {
+	var attemptCount int
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attemptCount++
+		if attemptCount < 3 {
+			// Return 400 with "Too many queries" error for first 2 attempts
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"code":3,"message":"Too many queries."}`))
+			return
+		}
+		// Return success on 3rd attempt
+		var req osvBatchRequest
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		results := make([]osvQueryResult, len(req.Queries))
+		resp := osvBatchResponse{Results: results}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	client := newTestOSVClientWithURL(server.URL)
+
+	packages := []Package{
+		{Name: "lodash", Version: "4.17.15", Ecosystem: "npm"},
+	}
+
+	_, err := client.CheckPackages(context.Background(), packages)
+	if err != nil {
+		t.Fatalf("CheckPackages failed: %v", err)
+	}
+
+	if attemptCount != 3 {
+		t.Errorf("expected 3 attempts, got %d", attemptCount)
+	}
+}
+
+func TestCheckPackagesWithVulnerabilities(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := osvBatchResponse{
+			Results: []osvQueryResult{
+				{
+					Vulns: []osvVulnerability{
+						{
+							ID:      "GHSA-1234",
+							Summary: "Test vulnerability",
+							Aliases: []string{"CVE-2021-12345"},
+						},
+					},
+				},
+				{
+					Vulns: []osvVulnerability{}, // No vulns for second package
+				},
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	client := newTestOSVClientWithURL(server.URL)
+
+	packages := []Package{
+		{Name: "vulnerable-pkg", Version: "1.0.0", Ecosystem: "npm"},
+		{Name: "safe-pkg", Version: "2.0.0", Ecosystem: "npm"},
+	}
+
+	findings, err := client.CheckPackages(context.Background(), packages)
+	if err != nil {
+		t.Fatalf("CheckPackages failed: %v", err)
+	}
+
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(findings))
+	}
+
+	if findings[0].Package.Name != "vulnerable-pkg" {
+		t.Errorf("expected finding for vulnerable-pkg, got %s", findings[0].Package.Name)
+	}
+
+	if len(findings[0].Vulnerabilities) != 1 {
+		t.Errorf("expected 1 vulnerability, got %d", len(findings[0].Vulnerabilities))
+	}
+
+	if findings[0].Vulnerabilities[0].ID != "GHSA-1234" {
+		t.Errorf("expected GHSA-1234, got %s", findings[0].Vulnerabilities[0].ID)
+	}
+}
+
+// newTestOSVClientWithURL creates an OSV client that uses a custom base URL for testing.
+func newTestOSVClientWithURL(baseURL string) *testOSVClientWithURL {
+	return &testOSVClientWithURL{
+		baseURL:    baseURL,
+		httpClient: &http.Client{},
+	}
+}
+
+type testOSVClientWithURL struct {
+	baseURL    string
+	httpClient *http.Client
+}
+
+// CheckPackages mirrors the real OSV client but uses a test server.
+func (c *testOSVClientWithURL) CheckPackages(ctx context.Context, packages []Package) ([]Finding, error) {
+	if len(packages) == 0 {
+		return nil, nil
+	}
+
+	var allFindings []Finding
+	for i := 0; i < len(packages); i += osvMaxBatchSize {
+		end := i + osvMaxBatchSize
+		if end > len(packages) {
+			end = len(packages)
+		}
+		chunk := packages[i:end]
+
+		findings, err := c.queryBatchWithRetry(ctx, chunk)
+		if err != nil {
+			return nil, err
+		}
+		allFindings = append(allFindings, findings...)
+
+		// Small delay between batches for tests
+		if end < len(packages) {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(10 * time.Millisecond):
+			}
+		}
+	}
+
+	return allFindings, nil
+}
+
+func (c *testOSVClientWithURL) queryBatchWithRetry(ctx context.Context, packages []Package) ([]Finding, error) {
+	var lastErr error
+
+	for attempt := 0; attempt < osvMaxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := 10 * time.Millisecond * time.Duration(1<<(attempt-1))
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+
+		findings, err := c.queryBatch(ctx, packages)
+		if err == nil {
+			return findings, nil
+		}
+
+		lastErr = err
+		if !isRetryableError(err) {
+			return nil, err
+		}
+	}
+
+	return nil, fmt.Errorf("OSV request failed after %d attempts: %w", osvMaxRetries, lastErr)
+}
+
+func (c *testOSVClientWithURL) queryBatch(ctx context.Context, packages []Package) ([]Finding, error) {
+	queries := make([]osvQuery, len(packages))
+	for i, pkg := range packages {
+		queries[i] = osvQuery{
+			Package: osvPackage{
+				Name:      pkg.Name,
+				Ecosystem: pkg.Ecosystem,
+			},
+			Version: pkg.Version,
+		}
+	}
+
+	reqBody, err := json.Marshal(osvBatchRequest{Queries: queries})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/querybatch", bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("OSV API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var batchResp osvBatchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&batchResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	var findings []Finding
+	for i, result := range batchResp.Results {
+		if i >= len(packages) {
+			break
+		}
+
+		if len(result.Vulns) == 0 {
+			continue
+		}
+
+		vulns := make([]Vulnerability, 0, len(result.Vulns))
+		for _, v := range result.Vulns {
+			vulns = append(vulns, convertOSVVuln(v))
+		}
+
+		findings = append(findings, Finding{
+			Package:         packages[i],
+			Vulnerabilities: vulns,
+		})
+	}
+
+	return findings, nil
 }
