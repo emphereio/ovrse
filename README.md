@@ -181,7 +181,7 @@ Connect directly to the hosted server. No installation required.
 
 ### Local MCP (Privacy and Offline)
 
-Run your own MCP server for full privacy and air-gapped environments.
+Run the MCP server on your machine instead of using the hosted endpoint. 
 
 **1. Install ovrse:**
 ```bash
