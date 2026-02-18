@@ -8,8 +8,8 @@
   "low_count": 0,
   "kev_count": 3,
   "with_fix_count": 4,
-  "last_updated": "2026-02-17T12:31:55.657107+00:00",
-  "expires_at": "2026-02-17T16:31:55.657107+00:00",
+  "last_updated": "2026-02-18T12:32:47.579561+00:00",
+  "expires_at": "2026-02-18T16:32:47.579561+00:00",
   "cves": [
     {
       "cve_id": "CVE-2025-11953",
@@ -21,10 +21,10 @@
       "has_fix": true,
       "fix_version": "20.1.1",
       "packages": [
+        "cli",
         "@react-native-community/cli-server-api",
-        "@react-native-community/cli",
         "react_native_community_cli",
-        "cli"
+        "@react-native-community/cli"
       ],
       "published_date": "2025-11-03T17:15:32.677000+00:00",
       "kev_date_added": "2026-02-05T00:00:00",
@@ -41,14 +41,14 @@
       "has_fix": true,
       "fix_version": "10.1.8",
       "packages": [
-        "eslint-config-prettier",
-        "got-fetch",
-        "homarr",
-        "synckit",
-        "@pkgr/core",
-        "pkgr\\/core",
         "eslint-plugin-prettier",
-        "napi-postinstall"
+        "napi-postinstall",
+        "@pkgr/core",
+        "synckit",
+        "pkgr\\/core",
+        "homarr",
+        "got-fetch",
+        "eslint-config-prettier"
       ],
       "published_date": "2025-07-19T17:15:23.733000+00:00",
       "kev_date_added": "2026-01-22T00:00:00",
@@ -92,11 +92,11 @@
   ],
   "top_packages": [
     {
-      "package": "@react-native-community/cli-server-api",
+      "package": "cli",
       "count": 1
     },
     {
-      "package": "@react-native-community/cli",
+      "package": "@react-native-community/cli-server-api",
       "count": 1
     },
     {
@@ -104,23 +104,15 @@
       "count": 1
     },
     {
-      "package": "cli",
+      "package": "@react-native-community/cli",
       "count": 1
     },
     {
-      "package": "eslint-config-prettier",
+      "package": "eslint-plugin-prettier",
       "count": 1
     },
     {
-      "package": "got-fetch",
-      "count": 1
-    },
-    {
-      "package": "homarr",
-      "count": 1
-    },
-    {
-      "package": "synckit",
+      "package": "napi-postinstall",
       "count": 1
     },
     {
@@ -128,7 +120,15 @@
       "count": 1
     },
     {
+      "package": "synckit",
+      "count": 1
+    },
+    {
       "package": "pkgr\\/core",
+      "count": 1
+    },
+    {
+      "package": "homarr",
       "count": 1
     }
   ]
