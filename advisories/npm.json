@@ -8,8 +8,8 @@
   "low_count": 0,
   "kev_count": 3,
   "with_fix_count": 4,
-  "last_updated": "2026-02-18T12:32:47.579561+00:00",
-  "expires_at": "2026-02-18T16:32:47.579561+00:00",
+  "last_updated": "2026-02-19T12:33:02.220109+00:00",
+  "expires_at": "2026-02-19T16:33:02.220109+00:00",
   "cves": [
     {
       "cve_id": "CVE-2025-11953",
@@ -21,10 +21,10 @@
       "has_fix": true,
       "fix_version": "20.1.1",
       "packages": [
-        "cli",
-        "@react-native-community/cli-server-api",
         "react_native_community_cli",
-        "@react-native-community/cli"
+        "@react-native-community/cli-server-api",
+        "@react-native-community/cli",
+        "cli"
       ],
       "published_date": "2025-11-03T17:15:32.677000+00:00",
       "kev_date_added": "2026-02-05T00:00:00",
@@ -41,14 +41,14 @@
       "has_fix": true,
       "fix_version": "10.1.8",
       "packages": [
-        "eslint-plugin-prettier",
-        "napi-postinstall",
-        "@pkgr/core",
-        "synckit",
         "pkgr\\/core",
+        "@pkgr/core",
         "homarr",
         "got-fetch",
-        "eslint-config-prettier"
+        "napi-postinstall",
+        "eslint-config-prettier",
+        "eslint-plugin-prettier",
+        "synckit"
       ],
       "published_date": "2025-07-19T17:15:23.733000+00:00",
       "kev_date_added": "2026-01-22T00:00:00",
@@ -92,7 +92,7 @@
   ],
   "top_packages": [
     {
-      "package": "cli",
+      "package": "react_native_community_cli",
       "count": 1
     },
     {
@@ -100,27 +100,11 @@
       "count": 1
     },
     {
-      "package": "react_native_community_cli",
-      "count": 1
-    },
-    {
       "package": "@react-native-community/cli",
       "count": 1
     },
     {
-      "package": "eslint-plugin-prettier",
-      "count": 1
-    },
-    {
-      "package": "napi-postinstall",
-      "count": 1
-    },
-    {
-      "package": "@pkgr/core",
-      "count": 1
-    },
-    {
-      "package": "synckit",
+      "package": "cli",
       "count": 1
     },
     {
@@ -128,7 +112,23 @@
       "count": 1
     },
     {
+      "package": "@pkgr/core",
+      "count": 1
+    },
+    {
       "package": "homarr",
+      "count": 1
+    },
+    {
+      "package": "got-fetch",
+      "count": 1
+    },
+    {
+      "package": "napi-postinstall",
+      "count": 1
+    },
+    {
+      "package": "eslint-config-prettier",
       "count": 1
     }
   ]
