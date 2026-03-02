@@ -20,7 +20,8 @@ const (
 	DefaultBaseURL = "https://mcp.emphere.dev"
 
 	// DefaultTimeout is the default HTTP request timeout.
-	DefaultTimeout = 30 * time.Second
+	// AI analysis of new CVEs can take 30s-2min, so we use a generous timeout.
+	DefaultTimeout = 180 * time.Second
 )
 
 // Client is an HTTP client for the Intel-engine API.

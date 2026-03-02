@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -17,11 +19,24 @@ import (
 const (
 	osvAPIURL      = "https://api.osv.dev/v1"
 	osvBatchQuery  = osvAPIURL + "/querybatch"
+
+	// OSV batch API has a limit of 1000 queries per request.
+	// We use 500 to stay well under the limit and reduce rate limiting.
+	osvMaxBatchSize = 500
+
+	// Delay between batch requests to avoid rate limiting.
+	osvBatchDelay = 100 * time.Millisecond
+
+	// Retry configuration for transient failures.
+	osvMaxRetries     = 3
+	osvInitialBackoff = 500 * time.Millisecond
 )
 
 // OSVClient queries the OSV.dev vulnerability database.
 type OSVClient struct {
-	httpClient *http.Client
+	httpClient    *http.Client
+	batchQueryURL string
+	apiURL        string
 }
 
 // NewOSVClient creates a new OSV API client.
@@ -30,6 +45,17 @@ func NewOSVClient() *OSVClient {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		batchQueryURL: osvBatchQuery,
+		apiURL:        osvAPIURL,
+	}
+}
+
+// newOSVClientWithURL creates an OSV client with a custom base URL (for testing).
+func newOSVClientWithURL(baseURL string) *OSVClient {
+	return &OSVClient{
+		httpClient:    &http.Client{},
+		batchQueryURL: baseURL + "/querybatch",
+		apiURL:        baseURL,
 	}
 }
 
@@ -37,6 +63,7 @@ func NewOSVClient() *OSVClient {
 var DefaultOSVClient = NewOSVClient()
 
 // CheckPackages queries OSV for vulnerabilities affecting the given packages.
+// Large package lists are automatically chunked to avoid API limits.
 func (c *OSVClient) CheckPackages(ctx context.Context, packages []Package) ([]Finding, error) {
 	logger := logging.WithComponent("osv")
 
@@ -47,7 +74,83 @@ func (c *OSVClient) CheckPackages(ctx context.Context, packages []Package) ([]Fi
 	logger.Debug().Int("package_count", len(packages)).Msg("querying OSV batch API")
 	start := time.Now()
 
-	// Build batch query
+	// Chunk packages to stay under OSV batch limit
+	var allFindings []Finding
+	for i := 0; i < len(packages); i += osvMaxBatchSize {
+		end := i + osvMaxBatchSize
+		if end > len(packages) {
+			end = len(packages)
+		}
+		chunk := packages[i:end]
+
+		logger.Debug().
+			Int("batch", i/osvMaxBatchSize+1).
+			Int("batch_size", len(chunk)).
+			Int("total_packages", len(packages)).
+			Msg("processing batch")
+
+		findings, err := c.queryBatchWithRetry(ctx, chunk)
+		if err != nil {
+			return nil, err
+		}
+		allFindings = append(allFindings, findings...)
+
+		// Add delay between batches to avoid rate limiting
+		if end < len(packages) {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(osvBatchDelay):
+			}
+		}
+	}
+
+	logger.Debug().
+		Int("findings", len(allFindings)).
+		Dur("duration", time.Since(start)).
+		Msg("OSV query completed")
+
+	return allFindings, nil
+}
+
+// queryBatchWithRetry queries a single batch with exponential backoff retry.
+func (c *OSVClient) queryBatchWithRetry(ctx context.Context, packages []Package) ([]Finding, error) {
+	logger := logging.WithComponent("osv")
+	var lastErr error
+
+	for attempt := 0; attempt < osvMaxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := osvInitialBackoff * time.Duration(1<<(attempt-1))
+			logger.Debug().
+				Int("attempt", attempt+1).
+				Dur("backoff", backoff).
+				Msg("retrying OSV request")
+
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+
+		findings, err := c.queryBatch(ctx, packages)
+		if err == nil {
+			return findings, nil
+		}
+
+		lastErr = err
+		// Only retry on transient errors (rate limiting, server errors)
+		if !isRetryableError(err) {
+			return nil, err
+		}
+		logger.Warn().Err(err).Int("attempt", attempt+1).Msg("OSV request failed, will retry")
+	}
+
+	return nil, fmt.Errorf("OSV request failed after %d attempts: %w", osvMaxRetries, lastErr)
+}
+
+// queryBatch performs a single batch query to OSV.
+func (c *OSVClient) queryBatch(ctx context.Context, packages []Package) ([]Finding, error) {
 	queries := make([]osvQuery, len(packages))
 	for i, pkg := range packages {
 		queries[i] = osvQuery{
@@ -64,7 +167,7 @@ func (c *OSVClient) CheckPackages(ctx context.Context, packages []Package) ([]Fi
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, osvBatchQuery, bytes.NewReader(reqBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.batchQueryURL, bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -108,12 +211,26 @@ func (c *OSVClient) CheckPackages(ctx context.Context, packages []Package) ([]Fi
 		})
 	}
 
-	logger.Debug().
-		Int("findings", len(findings)).
-		Dur("duration", time.Since(start)).
-		Msg("OSV query completed")
-
 	return findings, nil
+}
+
+// isRetryableError returns true if the error is transient and worth retrying.
+func isRetryableError(err error) bool {
+	// Retry on transient network errors (timeout, connection reset, etc.)
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return true
+	}
+
+	errStr := err.Error()
+	// Retry on rate limiting (400 with "Too many queries", or 429)
+	// and server errors (5xx)
+	return strings.Contains(errStr, "Too many queries") ||
+		strings.Contains(errStr, "status 429") ||
+		strings.Contains(errStr, "status 500") ||
+		strings.Contains(errStr, "status 502") ||
+		strings.Contains(errStr, "status 503") ||
+		strings.Contains(errStr, "status 504")
 }
 
 // convertOSVVuln converts an OSV vulnerability to our Vulnerability type.
@@ -261,7 +378,7 @@ type AffectedResult struct {
 // CheckIfAffected checks if a specific package version is affected by a vulnerability.
 func (c *OSVClient) CheckIfAffected(ctx context.Context, vulnID string, pkg Package) (*AffectedResult, error) {
 	// Query OSV for the vulnerability details
-	vulnURL := fmt.Sprintf("%s/vulns/%s", osvAPIURL, vulnID)
+	vulnURL := fmt.Sprintf("%s/vulns/%s", c.apiURL, vulnID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, vulnURL, nil)
 	if err != nil {
@@ -398,7 +515,7 @@ func (c *OSVClient) ResolveCVEID(ctx context.Context, vulnID string) (string, er
 	}
 
 	// Fetch vulnerability details from OSV
-	vulnURL := fmt.Sprintf("%s/vulns/%s", osvAPIURL, vulnID)
+	vulnURL := fmt.Sprintf("%s/vulns/%s", c.apiURL, vulnID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, vulnURL, nil)
 	if err != nil {
