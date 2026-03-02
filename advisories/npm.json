@@ -8,8 +8,8 @@
   "low_count": 0,
   "kev_count": 1,
   "with_fix_count": 2,
-  "last_updated": "2026-02-25T12:31:40.883618+00:00",
-  "expires_at": "2026-02-25T16:31:40.883618+00:00",
+  "last_updated": "2026-03-02T12:32:46.568749+00:00",
+  "expires_at": "2026-03-02T16:32:46.568749+00:00",
   "cves": [
     {
       "cve_id": "CVE-2025-11953",
@@ -22,9 +22,9 @@
       "fix_version": "20.1.1",
       "packages": [
         "@react-native-community/cli",
-        "@react-native-community/cli-server-api",
+        "cli",
         "react_native_community_cli",
-        "cli"
+        "@react-native-community/cli-server-api"
       ],
       "published_date": "2025-11-03T17:15:32.677000+00:00",
       "kev_date_added": "2026-02-05T00:00:00",
@@ -55,7 +55,7 @@
       "count": 1
     },
     {
-      "package": "@react-native-community/cli-server-api",
+      "package": "cli",
       "count": 1
     },
     {
@@ -63,7 +63,7 @@
       "count": 1
     },
     {
-      "package": "cli",
+      "package": "@react-native-community/cli-server-api",
       "count": 1
     },
     {

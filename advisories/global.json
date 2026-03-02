@@ -2,34 +2,16 @@
   "window": "30d",
   "total_cves": 3,
   "total_ecosystems": 6,
-  "last_updated": "2026-02-25T12:31:42.434891+00:00",
+  "last_updated": "2026-03-02T12:32:48.308666+00:00",
   "ecosystems": {
-    "maven": {
-      "ecosystem": "maven",
-      "total_cves": 0,
-      "critical_count": 0,
+    "npm": {
+      "ecosystem": "npm",
+      "total_cves": 2,
+      "critical_count": 2,
       "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-02-25T12:31:41.896541+00:00"
-    },
-    "gem": {
-      "ecosystem": "gem",
-      "total_cves": 1,
-      "critical_count": 1,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 1,
-      "last_updated": "2026-02-25T12:31:42.273867+00:00"
-    },
-    "go": {
-      "ecosystem": "go",
-      "total_cves": 0,
-      "critical_count": 0,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-02-25T12:31:41.692908+00:00"
+      "kev_count": 1,
+      "with_fix_count": 2,
+      "last_updated": "2026-03-02T12:32:46.568749+00:00"
     },
     "cargo": {
       "ecosystem": "cargo",
@@ -38,16 +20,16 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-02-25T12:31:42.108795+00:00"
+      "last_updated": "2026-03-02T12:32:47.709171+00:00"
     },
-    "npm": {
-      "ecosystem": "npm",
-      "total_cves": 2,
-      "critical_count": 2,
+    "maven": {
+      "ecosystem": "maven",
+      "total_cves": 0,
+      "critical_count": 0,
       "high_count": 0,
-      "kev_count": 1,
-      "with_fix_count": 2,
-      "last_updated": "2026-02-25T12:31:40.883618+00:00"
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-03-02T12:32:47.521561+00:00"
     },
     "pypi": {
       "ecosystem": "pypi",
@@ -56,7 +38,25 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-02-25T12:31:41.418849+00:00"
+      "last_updated": "2026-03-02T12:32:47.115970+00:00"
+    },
+    "go": {
+      "ecosystem": "go",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-03-02T12:32:47.321748+00:00"
+    },
+    "gem": {
+      "ecosystem": "gem",
+      "total_cves": 1,
+      "critical_count": 1,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 1,
+      "last_updated": "2026-03-02T12:32:47.850159+00:00"
     }
   },
   "top_critical": [
@@ -71,9 +71,9 @@
       "fix_version": "20.1.1",
       "packages": [
         "@react-native-community/cli",
-        "@react-native-community/cli-server-api",
+        "cli",
         "react_native_community_cli",
-        "cli"
+        "@react-native-community/cli-server-api"
       ],
       "published_date": "2025-11-03T17:15:32.677000+00:00",
       "kev_date_added": "2026-02-05T00:00:00",
@@ -90,9 +90,9 @@
       "has_fix": true,
       "fix_version": "unknown",
       "packages": [
-        "omniauth_saml",
-        "storagegrid",
         "ruby-saml",
+        "storagegrid",
+        "omniauth_saml",
         "omniauth-saml"
       ],
       "published_date": null,
