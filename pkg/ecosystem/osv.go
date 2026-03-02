@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -32,7 +34,9 @@ const (
 
 // OSVClient queries the OSV.dev vulnerability database.
 type OSVClient struct {
-	httpClient *http.Client
+	httpClient    *http.Client
+	batchQueryURL string
+	apiURL        string
 }
 
 // NewOSVClient creates a new OSV API client.
@@ -41,6 +45,17 @@ func NewOSVClient() *OSVClient {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		batchQueryURL: osvBatchQuery,
+		apiURL:        osvAPIURL,
+	}
+}
+
+// newOSVClientWithURL creates an OSV client with a custom base URL (for testing).
+func newOSVClientWithURL(baseURL string) *OSVClient {
+	return &OSVClient{
+		httpClient:    &http.Client{},
+		batchQueryURL: baseURL + "/querybatch",
+		apiURL:        baseURL,
 	}
 }
 
@@ -152,7 +167,7 @@ func (c *OSVClient) queryBatch(ctx context.Context, packages []Package) ([]Findi
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, osvBatchQuery, bytes.NewReader(reqBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.batchQueryURL, bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -201,6 +216,12 @@ func (c *OSVClient) queryBatch(ctx context.Context, packages []Package) ([]Findi
 
 // isRetryableError returns true if the error is transient and worth retrying.
 func isRetryableError(err error) bool {
+	// Retry on transient network errors (timeout, connection reset, etc.)
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return true
+	}
+
 	errStr := err.Error()
 	// Retry on rate limiting (400 with "Too many queries", or 429)
 	// and server errors (5xx)
@@ -357,7 +378,7 @@ type AffectedResult struct {
 // CheckIfAffected checks if a specific package version is affected by a vulnerability.
 func (c *OSVClient) CheckIfAffected(ctx context.Context, vulnID string, pkg Package) (*AffectedResult, error) {
 	// Query OSV for the vulnerability details
-	vulnURL := fmt.Sprintf("%s/vulns/%s", osvAPIURL, vulnID)
+	vulnURL := fmt.Sprintf("%s/vulns/%s", c.apiURL, vulnID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, vulnURL, nil)
 	if err != nil {
@@ -494,7 +515,7 @@ func (c *OSVClient) ResolveCVEID(ctx context.Context, vulnID string) (string, er
 	}
 
 	// Fetch vulnerability details from OSV
-	vulnURL := fmt.Sprintf("%s/vulns/%s", osvAPIURL, vulnID)
+	vulnURL := fmt.Sprintf("%s/vulns/%s", c.apiURL, vulnID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, vulnURL, nil)
 	if err != nil {
