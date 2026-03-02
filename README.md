@@ -254,7 +254,7 @@ Total: 2 packages, 3 vulnerabilities
 ### Generate Remediation Plans
 
 ```bash
-ovrse plan --cve CVE-2024-1234 \
+ovrse plan --cve CVE-2025-1234 \
   --os-family debian --distribution debian \
   --release 12 --arch amd64 \
   --package nginx --version 1.22.0 \

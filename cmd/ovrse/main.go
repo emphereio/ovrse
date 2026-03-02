@@ -165,6 +165,9 @@ func runScan(args []string) int {
 	outputJSON := fs.Bool("json", false, "Output as JSON")
 
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 2
 	}
 
@@ -314,6 +317,9 @@ func runMCP(args []string) int {
 	fs := flag.NewFlagSet("mcp", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr) // Critical: MCP uses stdout for protocol, errors must go to stderr
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 2
 	}
 
@@ -356,6 +362,9 @@ func runValidate(args []string) int {
 	templateDir := fs.String("templates", filepath.Join("examples", "templates"), "Directory containing OVRS templates")
 	kbDir := fs.String("kb", filepath.Join("examples", "kb"), "Directory containing knowledge base YAML files")
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 2
 	}
 
@@ -426,6 +435,9 @@ func runPlan(args []string) int {
 	explain := fs.Bool("explain", false, "Print a human readable summary instead of JSON/YAML output")
 
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 2
 	}
 
@@ -547,6 +559,9 @@ func runPlanHost(args []string) int {
 	explain := fs.Bool("explain", false, "Print a human readable summary")
 
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 2
 	}
 
