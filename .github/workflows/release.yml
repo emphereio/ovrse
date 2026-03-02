@@ -30,12 +30,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -56,7 +56,7 @@ jobs:
           go build -ldflags "-X github.com/emphereio/ovrse/pkg/mcp.Version=${VERSION}" -o ovrse-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/ovrse
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ovrse-${{ matrix.goos }}-${{ matrix.goarch }}
           path: ovrse-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -90,7 +90,7 @@ jobs:
           sha256sum *.tar.gz > checksums.txt
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.tar.gz
