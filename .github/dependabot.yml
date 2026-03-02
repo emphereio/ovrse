@@ -12,11 +12,6 @@ updates:
       - "dependencies"
       - "go"
     open-pull-requests-limit: 5
-    reviewers: []
-    groups:
-      go-dependencies:
-        patterns:
-          - "*"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -30,8 +25,3 @@ updates:
       - "dependencies"
       - "ci"
     open-pull-requests-limit: 5
-    reviewers: []
-    groups:
-      actions:
-        patterns:
-          - "*"
