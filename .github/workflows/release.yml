@@ -56,7 +56,7 @@ jobs:
           go build -ldflags "-X github.com/emphereio/ovrse/pkg/mcp.Version=${VERSION}" -o ovrse-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/ovrse
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ovrse-${{ matrix.goos }}-${{ matrix.goarch }}
           path: ovrse-${{ matrix.goos }}-${{ matrix.goarch }}
