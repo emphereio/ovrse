@@ -142,6 +142,71 @@ func (r *Registry) ScanAll(ctx context.Context, path string) ([]*ScanResult, err
 	return results, nil
 }
 
+// NativeAuditAll runs native audit on all matching plugins that support it.
+func (r *Registry) NativeAuditAll(ctx context.Context, path string) ([]*ScanResult, error) {
+	plugins := r.Detect(ctx, path)
+	if len(plugins) == 0 {
+		return nil, fmt.Errorf("no plugins found for path: %s", path)
+	}
+
+	var results []*ScanResult
+	var failedCount int
+	var auditableCount int
+
+	for _, p := range plugins {
+		na, ok := p.(PluginWithNativeAudit)
+		if !ok {
+			continue
+		}
+		auditableCount++
+
+		result, err := na.NativeAudit(ctx, path)
+		if err != nil {
+			result = &ScanResult{
+				Ecosystem: p.Info().Name,
+				Errors:    []string{err.Error()},
+				Status:    ScanStatusFailed,
+			}
+			failedCount++
+		} else if result == nil {
+			result = &ScanResult{
+				Ecosystem: p.Info().Name,
+				Errors:    []string{"native audit returned nil result"},
+				Status:    ScanStatusFailed,
+			}
+			failedCount++
+		} else if result.Status == "" {
+			if len(result.Errors) > 0 {
+				result.Status = ScanStatusPartial
+			} else {
+				result.Status = ScanStatusSuccess
+			}
+		}
+		results = append(results, result)
+	}
+
+	if auditableCount == 0 {
+		return nil, fmt.Errorf("no plugins with native audit support found for path: %s", path)
+	}
+
+	if failedCount == auditableCount {
+		var errMsgs []string
+		for _, r := range results {
+			for _, e := range r.Errors {
+				errMsgs = append(errMsgs, fmt.Sprintf("[%s] %s", r.Ecosystem, e))
+			}
+		}
+		return results, fmt.Errorf("all native audits failed: %s", strings.Join(errMsgs, "; "))
+	}
+
+	return results, nil
+}
+
+// NativeAuditAll runs native audit with all matching plugins from the default registry.
+func NativeAuditAll(ctx context.Context, path string) ([]*ScanResult, error) {
+	return DefaultRegistry.NativeAuditAll(ctx, path)
+}
+
 // Register adds a plugin to the default registry.
 func Register(plugin Plugin) error {
 	return DefaultRegistry.Register(plugin)
