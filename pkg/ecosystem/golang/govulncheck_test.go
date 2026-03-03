@@ -98,39 +98,136 @@ func TestGovulncheckNotInstalled(t *testing.T) {
 }
 
 func TestExtractFixVersion(t *testing.T) {
-	osv := &govulncheckOSV{
-		ID: "GO-2023-1840",
-		Affected: []govulncheckAffected{
-			{
-				Package: struct {
-					Ecosystem string `json:"ecosystem"`
-					Name      string `json:"name"`
-				}{
-					Ecosystem: "Go",
-					Name:      "github.com/example/vuln",
-				},
-				Ranges: []govulncheckRange{
-					{
-						Type: "SEMVER",
-						Events: []govulncheckEvent{
-							{Introduced: "0"},
-							{Fixed: "v1.2.3"},
-						},
-					},
-				},
+	t.Run("single range", func(t *testing.T) {
+		osv := &govulncheckOSV{
+			ID: "GO-2023-1840",
+			Affected: []govulncheckAffected{
+				makeAffected("github.com/example/vuln",
+					govulncheckRange{Type: "SEMVER", Events: []govulncheckEvent{
+						{Introduced: "0"}, {Fixed: "v1.2.3"},
+					}},
+				),
 			},
+		}
+
+		fix := extractFixVersion(osv, "github.com/example/vuln", "v1.0.0")
+		if fix != "v1.2.3" {
+			t.Errorf("expected v1.2.3, got %s", fix)
+		}
+	})
+
+	t.Run("multi-range picks correct fix", func(t *testing.T) {
+		osv := &govulncheckOSV{
+			ID: "GO-2024-MULTI",
+			Affected: []govulncheckAffected{
+				makeAffected("github.com/example/vuln",
+					govulncheckRange{Type: "SEMVER", Events: []govulncheckEvent{
+						{Introduced: "0"}, {Fixed: "v1.5.0"},
+						{Introduced: "v2.0.0"}, {Fixed: "v2.3.0"},
+					}},
+				),
+			},
+		}
+
+		// v1.0.0 is in the first range [0, v1.5.0)
+		if fix := extractFixVersion(osv, "github.com/example/vuln", "v1.0.0"); fix != "v1.5.0" {
+			t.Errorf("v1.0.0: expected v1.5.0, got %s", fix)
+		}
+
+		// v2.1.0 is in the second range [v2.0.0, v2.3.0)
+		if fix := extractFixVersion(osv, "github.com/example/vuln", "v2.1.0"); fix != "v2.3.0" {
+			t.Errorf("v2.1.0: expected v2.3.0, got %s", fix)
+		}
+	})
+
+	t.Run("multi-range across separate ranges", func(t *testing.T) {
+		osv := &govulncheckOSV{
+			ID: "GO-2024-SEPARATE",
+			Affected: []govulncheckAffected{
+				makeAffected("github.com/example/vuln",
+					govulncheckRange{Type: "SEMVER", Events: []govulncheckEvent{
+						{Introduced: "0"}, {Fixed: "v1.5.0"},
+					}},
+					govulncheckRange{Type: "SEMVER", Events: []govulncheckEvent{
+						{Introduced: "v2.0.0"}, {Fixed: "v2.3.0"},
+					}},
+				),
+			},
+		}
+
+		if fix := extractFixVersion(osv, "github.com/example/vuln", "v2.1.0"); fix != "v2.3.0" {
+			t.Errorf("v2.1.0: expected v2.3.0, got %s", fix)
+		}
+	})
+
+	t.Run("stdlib without v prefix", func(t *testing.T) {
+		osv := &govulncheckOSV{
+			ID: "GO-2023-1621",
+			Affected: []govulncheckAffected{
+				makeAffected("stdlib",
+					govulncheckRange{Type: "SEMVER", Events: []govulncheckEvent{
+						{Introduced: "0"}, {Fixed: "1.19.8"},
+						{Introduced: "1.20.0"}, {Fixed: "1.20.3"},
+					}},
+				),
+			},
+		}
+
+		if fix := extractFixVersion(osv, "stdlib", "v1.19.0"); fix != "1.19.8" {
+			t.Errorf("v1.19.0: expected 1.19.8, got %s", fix)
+		}
+		if fix := extractFixVersion(osv, "stdlib", "v1.20.1"); fix != "1.20.3" {
+			t.Errorf("v1.20.1: expected 1.20.3, got %s", fix)
+		}
+	})
+
+	t.Run("empty version falls back to first fix", func(t *testing.T) {
+		osv := &govulncheckOSV{
+			ID: "GO-2024-NOVERSION",
+			Affected: []govulncheckAffected{
+				makeAffected("github.com/example/vuln",
+					govulncheckRange{Type: "SEMVER", Events: []govulncheckEvent{
+						{Introduced: "0"}, {Fixed: "v1.5.0"},
+						{Introduced: "v2.0.0"}, {Fixed: "v2.3.0"},
+					}},
+				),
+			},
+		}
+
+		if fix := extractFixVersion(osv, "github.com/example/vuln", ""); fix != "v1.5.0" {
+			t.Errorf("empty version: expected fallback v1.5.0, got %s", fix)
+		}
+	})
+
+	t.Run("module fallback", func(t *testing.T) {
+		osv := &govulncheckOSV{
+			ID: "GO-2023-1840",
+			Affected: []govulncheckAffected{
+				makeAffected("github.com/example/vuln",
+					govulncheckRange{Type: "SEMVER", Events: []govulncheckEvent{
+						{Introduced: "0"}, {Fixed: "v1.2.3"},
+					}},
+				),
+			},
+		}
+
+		fix := extractFixVersion(osv, "github.com/other/module", "v1.0.0")
+		if fix != "v1.2.3" {
+			t.Errorf("expected fallback v1.2.3, got %s", fix)
+		}
+	})
+}
+
+func makeAffected(name string, ranges ...govulncheckRange) govulncheckAffected {
+	return govulncheckAffected{
+		Package: struct {
+			Ecosystem string `json:"ecosystem"`
+			Name      string `json:"name"`
+		}{
+			Ecosystem: "Go",
+			Name:      name,
 		},
-	}
-
-	fix := extractFixVersion(osv, "github.com/example/vuln")
-	if fix != "v1.2.3" {
-		t.Errorf("expected fix version v1.2.3, got %s", fix)
-	}
-
-	// Non-matching module should still find fix via fallback
-	fix2 := extractFixVersion(osv, "github.com/other/module")
-	if fix2 != "v1.2.3" {
-		t.Errorf("expected fallback fix version v1.2.3, got %s", fix2)
+		Ranges: ranges,
 	}
 }
 
