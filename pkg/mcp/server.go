@@ -76,6 +76,7 @@ func (s *Server) registerTools() {
 			mcp.WithDescription("Scan a project for vulnerabilities. Auto-detects ecosystem (npm, go, pip, etc.) from lock files."),
 			mcp.WithString("path", mcp.Required(), mcp.Description("Path to the project directory")),
 			mcp.WithString("ecosystem", mcp.Description("Force specific ecosystem (optional)")),
+			mcp.WithBoolean("native_audit", mcp.Description("Use native audit tools (e.g. govulncheck for Go) for deeper analysis")),
 		),
 		s.handleScanProject,
 	)
@@ -100,7 +101,6 @@ func (s *Server) registerTools() {
 		s.handleGetFix,
 	)
 
-	// Intel-engine tools (same as before)
 	s.registerIntelTools()
 }
 
@@ -142,12 +142,35 @@ func (s *Server) handleScanProject(ctx context.Context, request mcp.CallToolRequ
 		return errorResult(fmt.Errorf("path is not a directory: %s", absPath)), nil
 	}
 
-	// Use the validated path for scanning
 	scanPath := absPath
 
 	var results []*ecosystem.ScanResult
 
-	if args.Ecosystem != "" {
+	if args.NativeAudit {
+		// Use native audit tools (govulncheck, npm audit, etc.)
+		if args.Ecosystem != "" {
+			normalizedEco := ecosystem.NormalizeEcosystem(args.Ecosystem)
+			plugin, ok := ecosystem.Get(normalizedEco)
+			if !ok {
+				return errorResult(fmt.Errorf("unknown ecosystem: %s", args.Ecosystem)), nil
+			}
+			na, ok := plugin.(ecosystem.PluginWithNativeAudit)
+			if !ok {
+				return errorResult(fmt.Errorf("ecosystem %s does not support native audit", args.Ecosystem)), nil
+			}
+			result, err := na.NativeAudit(ctx, scanPath)
+			if err != nil {
+				return errorResult(fmt.Errorf("native audit failed: %w", err)), nil
+			}
+			results = append(results, result)
+		} else {
+			var err error
+			results, err = ecosystem.NativeAuditAll(ctx, scanPath)
+			if err != nil {
+				return errorResult(fmt.Errorf("native audit failed: %w", err)), nil
+			}
+		}
+	} else if args.Ecosystem != "" {
 		// Use specific plugin (normalize for registry lookup)
 		normalizedEco := ecosystem.NormalizeEcosystem(args.Ecosystem)
 		plugin, ok := ecosystem.Get(normalizedEco)
@@ -536,10 +559,10 @@ func determineAction(status version.VulnerabilityStatus) string {
 	}
 }
 
-// Request/Response types for V2
 type ScanProjectArgs struct {
-	Path      string `json:"path"`
-	Ecosystem string `json:"ecosystem,omitempty"`
+	Path        string `json:"path"`
+	Ecosystem   string `json:"ecosystem,omitempty"`
+	NativeAudit bool   `json:"native_audit,omitempty"`
 }
 
 type ScanResponse struct {

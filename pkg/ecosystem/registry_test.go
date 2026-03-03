@@ -478,6 +478,130 @@ func TestConcurrentPluginOperations(t *testing.T) {
 	}
 }
 
+// mockNativeAuditPlugin implements both Plugin and PluginWithNativeAudit.
+type mockNativeAuditPlugin struct {
+	mockPlugin
+	nativeAuditFunc func(path string) (*ScanResult, error)
+}
+
+func (m *mockNativeAuditPlugin) NativeAudit(ctx context.Context, path string) (*ScanResult, error) {
+	if m.nativeAuditFunc != nil {
+		return m.nativeAuditFunc(path)
+	}
+	return &ScanResult{Ecosystem: m.name, PackagesScanned: 1}, nil
+}
+
+func TestNativeAuditAll(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successful native audit", func(t *testing.T) {
+		r := NewRegistry()
+		_ = r.Register(&mockNativeAuditPlugin{
+			mockPlugin: mockPlugin{
+				name:       "go",
+				detectFunc: func(path string) bool { return true },
+			},
+			nativeAuditFunc: func(path string) (*ScanResult, error) {
+				return &ScanResult{Ecosystem: "go", PackagesScanned: 5, Status: ScanStatusSuccess}, nil
+			},
+		})
+
+		results, err := r.NativeAuditAll(ctx, "/project")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(results) != 1 {
+			t.Fatalf("expected 1 result, got %d", len(results))
+		}
+		if results[0].PackagesScanned != 5 {
+			t.Errorf("expected 5 packages, got %d", results[0].PackagesScanned)
+		}
+	})
+
+	t.Run("skips plugins without native audit", func(t *testing.T) {
+		r := NewRegistry()
+		// Regular plugin (no NativeAudit)
+		_ = r.Register(&mockPlugin{
+			name:       "npm",
+			detectFunc: func(path string) bool { return true },
+		})
+		// Plugin with NativeAudit
+		_ = r.Register(&mockNativeAuditPlugin{
+			mockPlugin: mockPlugin{
+				name:       "go",
+				detectFunc: func(path string) bool { return true },
+			},
+			nativeAuditFunc: func(path string) (*ScanResult, error) {
+				return &ScanResult{Ecosystem: "go", PackagesScanned: 3, Status: ScanStatusSuccess}, nil
+			},
+		})
+
+		results, err := r.NativeAuditAll(ctx, "/project")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		// Only the go plugin should have been audited
+		if len(results) != 1 {
+			t.Fatalf("expected 1 result (only native-audit-capable), got %d", len(results))
+		}
+		if results[0].Ecosystem != "go" {
+			t.Errorf("expected go ecosystem, got %s", results[0].Ecosystem)
+		}
+	})
+
+	t.Run("no native audit capable plugins", func(t *testing.T) {
+		r := NewRegistry()
+		_ = r.Register(&mockPlugin{
+			name:       "npm",
+			detectFunc: func(path string) bool { return true },
+		})
+
+		_, err := r.NativeAuditAll(ctx, "/project")
+		if err == nil {
+			t.Error("expected error when no plugins support native audit")
+		}
+	})
+
+	t.Run("all native audits fail", func(t *testing.T) {
+		r := NewRegistry()
+		_ = r.Register(&mockNativeAuditPlugin{
+			mockPlugin: mockPlugin{
+				name:       "go",
+				detectFunc: func(path string) bool { return true },
+			},
+			nativeAuditFunc: func(path string) (*ScanResult, error) {
+				return nil, fmt.Errorf("govulncheck not installed")
+			},
+		})
+
+		results, err := r.NativeAuditAll(ctx, "/project")
+		if err == nil {
+			t.Fatal("expected error when all native audits fail")
+		}
+		if len(results) != 1 {
+			t.Fatalf("expected 1 result, got %d", len(results))
+		}
+		if results[0].Status != ScanStatusFailed {
+			t.Errorf("expected Failed status, got %s", results[0].Status)
+		}
+	})
+
+	t.Run("no matching plugins", func(t *testing.T) {
+		r := NewRegistry()
+		_ = r.Register(&mockNativeAuditPlugin{
+			mockPlugin: mockPlugin{
+				name:       "go",
+				detectFunc: func(path string) bool { return false },
+			},
+		})
+
+		_, err := r.NativeAuditAll(ctx, "/project")
+		if err == nil {
+			t.Error("expected error when no plugins match")
+		}
+	})
+}
+
 func TestNormalizeEcosystem(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -163,6 +163,7 @@ func runScan(args []string) int {
 	path := fs.String("path", ".", "Path to project directory")
 	eco := fs.String("ecosystem", "", "Force specific ecosystem (npm, go, pip)")
 	outputJSON := fs.Bool("json", false, "Output as JSON")
+	nativeAudit := fs.Bool("native-audit", false, "Use native audit tools (e.g. govulncheck) for deeper analysis")
 
 	if err := fs.Parse(args); err != nil {
 		if err == flag.ErrHelp {
@@ -187,13 +188,42 @@ func runScan(args []string) int {
 		Str("path", absPath).
 		Str("ecosystem", *eco).
 		Bool("json", *outputJSON).
+		Bool("native-audit", *nativeAudit).
 		Msg("starting scan")
 
 	ctx := context.Background()
 
 	var results []*ecosystem.ScanResult
 
-	if *eco != "" {
+	if *nativeAudit {
+		// Use native audit tools (govulncheck, npm audit, etc.)
+		if *eco != "" {
+			normalizedEco := ecosystem.NormalizeEcosystem(*eco)
+			plugin, ok := ecosystem.Get(normalizedEco)
+			if !ok {
+				fmt.Fprintf(os.Stderr, "unknown ecosystem: %s\n", *eco)
+				return 1
+			}
+			na, ok := plugin.(ecosystem.PluginWithNativeAudit)
+			if !ok {
+				fmt.Fprintf(os.Stderr, "ecosystem %s does not support native audit\n", *eco)
+				return 1
+			}
+			result, err := na.NativeAudit(ctx, absPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "native audit failed: %v\n", err)
+				return 1
+			}
+			results = append(results, result)
+		} else {
+			var err error
+			results, err = ecosystem.NativeAuditAll(ctx, absPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "native audit failed: %v\n", err)
+				return 1
+			}
+		}
+	} else if *eco != "" {
 		// Use specific plugin (normalize for registry lookup)
 		normalizedEco := ecosystem.NormalizeEcosystem(*eco)
 		plugin, ok := ecosystem.Get(normalizedEco)
