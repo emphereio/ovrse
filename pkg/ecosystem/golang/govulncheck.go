@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/emphereio/ovrse/pkg/ecosystem"
+	"github.com/emphereio/ovrse/pkg/version"
 )
 
 // govulncheckMessage is a single JSON object from govulncheck's streaming output.
@@ -151,7 +152,7 @@ func (r *govulncheckResult) toEcosystemFindings() []ecosystem.Finding {
 			vuln.Details = osv.Details
 			vuln.Aliases = osv.Aliases
 			vuln.Severity = extractSeverity(osv)
-			vuln.FixVersion = extractFixVersion(osv, entry.Module)
+			vuln.FixVersion = extractFixVersion(osv, entry.Module, entry.Version)
 		}
 
 		pkgFindings[key][f.OSV] = vuln
@@ -200,28 +201,55 @@ func extractSeverity(osv *govulncheckOSV) string {
 }
 
 // extractFixVersion returns the fix version for a module from OSV affected ranges.
-// BUG(#40): Returns the first "fixed" event, which is incorrect for multi-range
-// entries. A module at v2.1 with ranges [{introduced:0,fixed:1.5},{introduced:2.0,
-// fixed:2.3}] would incorrectly get 1.5 instead of 2.3.
-func extractFixVersion(osv *govulncheckOSV, module string) string {
+// When version is provided and valid semver, it matches the installed version against
+// each range's [introduced, fixed) interval and returns the correct fix. Falls back
+// to the first "fixed" event when version comparison isn't possible.
+func extractFixVersion(osv *govulncheckOSV, module, version string) string {
 	for _, a := range osv.Affected {
 		if a.Package.Name == module {
-			for _, r := range a.Ranges {
-				for _, e := range r.Events {
-					if e.Fixed != "" {
+			if fix := findFixInRanges(a.Ranges, version); fix != "" {
+				return fix
+			}
+		}
+	}
+	// Fallback: try any affected entry
+	for _, a := range osv.Affected {
+		if fix := findFixInRanges(a.Ranges, version); fix != "" {
+			return fix
+		}
+	}
+	return ""
+}
+
+// findFixInRanges searches SEMVER ranges for the fix version that applies to ver.
+// Uses version.InRange for comparison, which handles v-prefix normalization and
+// zero-version detection. Falls back to first fixed event when version is empty
+// or comparison fails.
+func findFixInRanges(ranges []govulncheckRange, ver string) string {
+	if ver != "" {
+		for _, r := range ranges {
+			if r.Type != "SEMVER" {
+				continue
+			}
+			var intro string
+			for _, e := range r.Events {
+				if e.Introduced != "" {
+					intro = e.Introduced
+				}
+				if e.Fixed != "" {
+					if inRange, err := version.InRange(ver, intro, e.Fixed, version.SemverFormat); err == nil && inRange {
 						return e.Fixed
 					}
 				}
 			}
 		}
 	}
-	// Fallback: try any affected entry
-	for _, a := range osv.Affected {
-		for _, r := range a.Ranges {
-			for _, e := range r.Events {
-				if e.Fixed != "" {
-					return e.Fixed
-				}
+
+	// Fallback: return first fixed event
+	for _, r := range ranges {
+		for _, e := range r.Events {
+			if e.Fixed != "" {
+				return e.Fixed
 			}
 		}
 	}
