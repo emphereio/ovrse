@@ -5,7 +5,7 @@ go 1.24.6
 require (
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/aquasecurity/go-pep440-version v0.0.1
-	github.com/mattn/go-sqlite3 v1.14.34
+	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/rs/zerolog v1.34.0
 	golang.org/x/mod v0.33.0
 	gopkg.in/yaml.v3 v3.0.1
