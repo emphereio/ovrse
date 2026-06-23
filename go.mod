@@ -7,7 +7,7 @@ require (
 	github.com/aquasecurity/go-pep440-version v0.0.1
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/rs/zerolog v1.35.1
-	golang.org/x/mod v0.33.0
+	golang.org/x/mod v0.37.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
