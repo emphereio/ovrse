@@ -1,74 +1,15 @@
 {
   "ecosystem": "npm",
   "window": "30d",
-  "total_cves": 2,
-  "critical_count": 2,
+  "total_cves": 0,
+  "critical_count": 0,
   "high_count": 0,
   "medium_count": 0,
   "low_count": 0,
-  "kev_count": 1,
-  "with_fix_count": 2,
-  "last_updated": "2026-03-02T12:32:46.568749+00:00",
-  "expires_at": "2026-03-02T16:32:46.568749+00:00",
-  "cves": [
-    {
-      "cve_id": "CVE-2025-11953",
-      "summary": "Critical React Native CLI vulnerability with federal compliance deadline requires immediate patching.",
-      "severity": "critical",
-      "cvss_score": 9.8,
-      "epss_percentile": 0.91232,
-      "kev_listed": true,
-      "has_fix": true,
-      "fix_version": "20.1.1",
-      "packages": [
-        "@react-native-community/cli",
-        "cli",
-        "react_native_community_cli",
-        "@react-native-community/cli-server-api"
-      ],
-      "published_date": "2025-11-03T17:15:32.677000+00:00",
-      "kev_date_added": "2026-02-05T00:00:00",
-      "added_to_advisory": "2026-02-15T02:11:33.576147+00:00",
-      "priority_score": 97.06960000000001
-    },
-    {
-      "cve_id": "CVE-2026-25115",
-      "summary": "Critical container escape vulnerability in n8n requires immediate patching, but major version upgrade needs careful migration planning.",
-      "severity": "critical",
-      "cvss_score": 9.4,
-      "epss_percentile": 0.14676,
-      "kev_listed": false,
-      "has_fix": true,
-      "fix_version": "2.7.4",
-      "packages": [
-        "n8n"
-      ],
-      "published_date": null,
-      "kev_date_added": null,
-      "added_to_advisory": "2026-02-14T00:31:51.171450+00:00",
-      "priority_score": 23.5028
-    }
-  ],
-  "top_packages": [
-    {
-      "package": "@react-native-community/cli",
-      "count": 1
-    },
-    {
-      "package": "cli",
-      "count": 1
-    },
-    {
-      "package": "react_native_community_cli",
-      "count": 1
-    },
-    {
-      "package": "@react-native-community/cli-server-api",
-      "count": 1
-    },
-    {
-      "package": "n8n",
-      "count": 1
-    }
-  ]
+  "kev_count": 0,
+  "with_fix_count": 0,
+  "last_updated": "2026-06-23T16:32:26.807725+00:00",
+  "expires_at": "2026-06-23T20:32:26.807725+00:00",
+  "cves": [],
+  "top_packages": []
 }
