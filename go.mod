@@ -3,7 +3,7 @@ module github.com/emphereio/ovrse
 go 1.25.5
 
 require (
-	github.com/Masterminds/semver/v3 v3.4.0
+	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/aquasecurity/go-pep440-version v0.0.1
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/rs/zerolog v1.34.0
