@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -75,7 +76,7 @@ func TestConvertOSVVuln(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vuln := convertOSVVuln(tt.vuln)
+			vuln := convertOSVVuln(tt.vuln, Package{Name: "example", Version: "1.0.0", Ecosystem: "npm"})
 			if vuln.ID != tt.wantID {
 				t.Errorf("ID = %q, want %q", vuln.ID, tt.wantID)
 			}
@@ -176,6 +177,7 @@ func TestExtractFixVersion(t *testing.T) {
 	tests := []struct {
 		name    string
 		vuln    osvVulnerability
+		pkg     Package
 		wantFix string
 	}{
 		{
@@ -245,11 +247,392 @@ func TestExtractFixVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fix := extractFixVersion(tt.vuln)
+			fix := extractFixVersion(tt.vuln, tt.pkg)
 			if fix != tt.wantFix {
 				t.Errorf("extractFixVersion() = %q, want %q", fix, tt.wantFix)
 			}
 		})
+	}
+}
+
+// multiBranchVuln mirrors the shape of a real advisory that patches several
+// maintained branches in one unordered event list (PYSEC-2023-100 / Django).
+func multiBranchVuln() osvVulnerability {
+	return osvVulnerability{
+		ID: "PYSEC-multi-branch",
+		Affected: []osvAffected{
+			{
+				Package: osvPackage{Name: "django", Ecosystem: "PyPI"},
+				Ranges: []osvRange{
+					{
+						Type: "ECOSYSTEM",
+						Events: []osvEvent{
+							{Introduced: "4.2"},
+							{Fixed: "4.2.3"},
+							{Introduced: "4.0"},
+							{Fixed: "4.1.10"},
+							{Introduced: "3.2"},
+							{Fixed: "3.2.20"},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func TestExtractFixVersionSelectsInstalledBranch(t *testing.T) {
+	tests := []struct {
+		name    string
+		version string
+		wantFix string
+	}{
+		{"oldest supported branch", "3.2.10", "3.2.20"},
+		{"middle branch", "4.0.5", "4.1.10"},
+		{"newest branch", "4.2.1", "4.2.3"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pkg := Package{Name: "django", Version: tt.version, Ecosystem: "PyPI"}
+			if fix := extractFixVersion(multiBranchVuln(), pkg); fix != tt.wantFix {
+				t.Errorf("extractFixVersion() for %s = %q, want %q", tt.version, fix, tt.wantFix)
+			}
+		})
+	}
+}
+
+// perBranchVuln mirrors an advisory that gives each maintained branch its own
+// affected entry, as GitHub advisories for Django do (GHSA-2gwj-7jmv-h26r).
+func perBranchVuln() osvVulnerability {
+	branch := func(introduced, fixed string) osvAffected {
+		return osvAffected{
+			Package: osvPackage{Name: "django", Ecosystem: "PyPI"},
+			Ranges: []osvRange{
+				{
+					Type: "ECOSYSTEM",
+					Events: []osvEvent{
+						{Introduced: introduced},
+						{Fixed: fixed},
+					},
+				},
+			},
+		}
+	}
+
+	return osvVulnerability{
+		ID: "GHSA-per-branch",
+		Affected: []osvAffected{
+			branch("2.2", "2.2.28"),
+			branch("3.2", "3.2.13"),
+			branch("4.0", "4.0.4"),
+		},
+	}
+}
+
+func TestExtractFixVersionSearchesEveryAffectedEntry(t *testing.T) {
+	// The 2.2 entry comes first and offers a fix, but 3.2.10 belongs to the
+	// 3.2 branch: falling back to the first entry's fix would be a downgrade.
+	pkg := Package{Name: "django", Version: "3.2.10", Ecosystem: "PyPI"}
+	if fix := extractFixVersion(perBranchVuln(), pkg); fix != "3.2.13" {
+		t.Errorf("extractFixVersion() = %q, want %q", fix, "3.2.13")
+	}
+
+	pkg.Version = "4.0.1"
+	if fix := extractFixVersion(perBranchVuln(), pkg); fix != "4.0.4" {
+		t.Errorf("extractFixVersion() = %q, want %q", fix, "4.0.4")
+	}
+
+	// A version no branch covers still reports a fix, as before.
+	pkg.Version = "1.11.29"
+	if fix := extractFixVersion(perBranchVuln(), pkg); fix != "2.2.28" {
+		t.Errorf("extractFixVersion() = %q, want %q", fix, "2.2.28")
+	}
+}
+
+func TestExtractFixVersionFallsBackWithoutVersion(t *testing.T) {
+	// No installed version to compare against: keep the previous behaviour of
+	// returning the first fix event rather than reporting no fix at all.
+	pkg := Package{Name: "django", Ecosystem: "PyPI"}
+	if fix := extractFixVersion(multiBranchVuln(), pkg); fix != "4.2.3" {
+		t.Errorf("extractFixVersion() = %q, want %q", fix, "4.2.3")
+	}
+
+	// An installed version the format cannot compare falls back the same way.
+	pkg.Version = "not-a-version"
+	if fix := extractFixVersion(multiBranchVuln(), pkg); fix != "4.2.3" {
+		t.Errorf("extractFixVersion() with uncomparable version = %q, want %q", fix, "4.2.3")
+	}
+}
+
+func TestExtractFixVersionIgnoresOtherPackages(t *testing.T) {
+	vuln := osvVulnerability{
+		ID: "GHSA-two-packages",
+		Affected: []osvAffected{
+			{
+				Package: osvPackage{Name: "scanned-pkg", Ecosystem: "npm"},
+				Ranges: []osvRange{
+					{
+						Type: "SEMVER",
+						Events: []osvEvent{
+							{Introduced: "0"},
+							{LastAffected: "1.4.0"},
+						},
+					},
+				},
+			},
+			{
+				Package: osvPackage{Name: "other-pkg", Ecosystem: "npm"},
+				Ranges: []osvRange{
+					{
+						Type: "SEMVER",
+						Events: []osvEvent{
+							{Introduced: "0"},
+							{Fixed: "9.9.9"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	pkg := Package{Name: "scanned-pkg", Version: "1.2.0", Ecosystem: "npm"}
+	if fix := extractFixVersion(vuln, pkg); fix != "" {
+		t.Errorf("extractFixVersion() = %q, want %q (9.9.9 fixes a different package)", fix, "")
+	}
+
+	// An advisory that omits package metadata still resolves through the
+	// fallback scan over every affected entry.
+	vuln.Affected[0].Package = osvPackage{}
+	vuln.Affected[1].Package = osvPackage{}
+	if fix := extractFixVersion(vuln, pkg); fix != "9.9.9" {
+		t.Errorf("extractFixVersion() with unnamed packages = %q, want %q", fix, "9.9.9")
+	}
+}
+
+func TestExtractFixVersionPrefersVersionsOverCommits(t *testing.T) {
+	// Advisories often carry a GIT range whose "fixed" event is a commit hash
+	// alongside the ecosystem range (PYSEC-2022-304 / Django).
+	commit := "5b6b257fa7ec37ff27965358800c67e2dd11c924"
+	vuln := osvVulnerability{
+		ID: "PYSEC-git-range",
+		Affected: []osvAffected{
+			{
+				Package: osvPackage{Name: "django", Ecosystem: "PyPI"},
+				Ranges: []osvRange{
+					{
+						Type: "GIT",
+						Events: []osvEvent{
+							{Introduced: "0"},
+							{Fixed: commit},
+						},
+					},
+					{
+						Type: "ECOSYSTEM",
+						Events: []osvEvent{
+							{Introduced: "3.2"},
+							{Fixed: "3.2.16"},
+							{Introduced: "4.1"},
+							{Fixed: "4.1.2"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	pkg := Package{Name: "django", Version: "4.1.1", Ecosystem: "PyPI"}
+	if fix := extractFixVersion(vuln, pkg); fix != "4.1.2" {
+		t.Errorf("extractFixVersion() = %q, want %q", fix, "4.1.2")
+	}
+
+	// Without an installed version the ecosystem range is still preferred to
+	// the commit hash.
+	pkg.Version = ""
+	if fix := extractFixVersion(vuln, pkg); fix != "3.2.16" {
+		t.Errorf("extractFixVersion() without version = %q, want %q", fix, "3.2.16")
+	}
+
+	// A GIT-only advisory has nothing else to offer, so the hash is still
+	// returned as before.
+	vuln.Affected[0].Ranges = vuln.Affected[0].Ranges[:1]
+	if fix := extractFixVersion(vuln, pkg); fix != commit {
+		t.Errorf("extractFixVersion() for GIT-only advisory = %q, want %q", fix, commit)
+	}
+}
+
+func TestCheckPackagesReportsBranchFixVersion(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := osvBatchResponse{
+			Results: []osvQueryResult{
+				{Vulns: []osvVulnerability{multiBranchVuln()}},
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	client := newOSVClientWithURL(server.URL)
+	findings, err := client.CheckPackages(context.Background(), []Package{
+		{Name: "django", Version: "3.2.10", Ecosystem: "PyPI"},
+	})
+	if err != nil {
+		t.Fatalf("CheckPackages failed: %v", err)
+	}
+
+	if len(findings) != 1 || len(findings[0].Vulnerabilities) != 1 {
+		t.Fatalf("expected 1 finding with 1 vulnerability, got %+v", findings)
+	}
+
+	if got := findings[0].Vulnerabilities[0].FixVersion; got != "3.2.20" {
+		t.Errorf("FixVersion = %q, want %q (upgrading 3.2.10 to 4.2.3 changes major version)", got, "3.2.20")
+	}
+}
+
+// osvServer serves the two endpoints a scan uses: a batch query that answers
+// with IDs only, exactly as OSV does, and the per-vulnerability record.
+func osvServer(t *testing.T, ids [][]string, details map[string]osvVulnerability, detailStatus int) (*httptest.Server, *int32) {
+	t.Helper()
+
+	var detailRequests int32
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/querybatch", func(w http.ResponseWriter, r *http.Request) {
+		resp := osvBatchResponse{}
+		for _, perPackage := range ids {
+			result := osvQueryResult{}
+			for _, id := range perPackage {
+				result.Vulns = append(result.Vulns, osvVulnerability{ID: id})
+			}
+			resp.Results = append(resp.Results, result)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	})
+	mux.HandleFunc("/vulns/", func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&detailRequests, 1)
+		if detailStatus != http.StatusOK {
+			w.WriteHeader(detailStatus)
+			return
+		}
+		id := strings.TrimPrefix(r.URL.Path, "/vulns/")
+		detail, ok := details[id]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(detail)
+	})
+
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	return server, &detailRequests
+}
+
+func TestCheckPackagesFillsInBatchResults(t *testing.T) {
+	detail := multiBranchVuln()
+	server, requests := osvServer(t,
+		[][]string{{detail.ID}},
+		map[string]osvVulnerability{detail.ID: detail},
+		http.StatusOK,
+	)
+
+	client := newOSVClientWithURL(server.URL)
+	findings, err := client.CheckPackages(context.Background(), []Package{
+		{Name: "django", Version: "3.2.10", Ecosystem: "PyPI"},
+	})
+	if err != nil {
+		t.Fatalf("CheckPackages failed: %v", err)
+	}
+
+	if len(findings) != 1 || len(findings[0].Vulnerabilities) != 1 {
+		t.Fatalf("expected 1 finding with 1 vulnerability, got %+v", findings)
+	}
+
+	// The batch endpoint returns IDs only, so without the follow-up lookup
+	// there is no fix version to report at all.
+	if got := findings[0].Vulnerabilities[0].FixVersion; got != "3.2.20" {
+		t.Errorf("FixVersion = %q, want %q", got, "3.2.20")
+	}
+	if got := atomic.LoadInt32(requests); got != 1 {
+		t.Errorf("advisory lookups = %d, want 1", got)
+	}
+}
+
+func TestCheckPackagesFetchesEachAdvisoryOnce(t *testing.T) {
+	detail := multiBranchVuln()
+	server, requests := osvServer(t,
+		[][]string{{detail.ID}, {detail.ID}},
+		map[string]osvVulnerability{detail.ID: detail},
+		http.StatusOK,
+	)
+
+	client := newOSVClientWithURL(server.URL)
+	packages := []Package{
+		{Name: "django", Version: "3.2.10", Ecosystem: "PyPI"},
+		{Name: "django", Version: "4.0.5", Ecosystem: "PyPI"},
+	}
+
+	findings, err := client.CheckPackages(context.Background(), packages)
+	if err != nil {
+		t.Fatalf("CheckPackages failed: %v", err)
+	}
+	if len(findings) != 2 {
+		t.Fatalf("expected 2 findings, got %d", len(findings))
+	}
+
+	// The same advisory shared by both packages costs one lookup, and each
+	// package still gets the fix version for its own branch.
+	if got := atomic.LoadInt32(requests); got != 1 {
+		t.Errorf("advisory lookups = %d, want 1", got)
+	}
+	if got := findings[0].Vulnerabilities[0].FixVersion; got != "3.2.20" {
+		t.Errorf("FixVersion for 3.2.10 = %q, want %q", got, "3.2.20")
+	}
+	if got := findings[1].Vulnerabilities[0].FixVersion; got != "4.1.10" {
+		t.Errorf("FixVersion for 4.0.5 = %q, want %q", got, "4.1.10")
+	}
+
+	// A second scan reuses the cached advisory rather than fetching it again.
+	if _, err := client.CheckPackages(context.Background(), packages); err != nil {
+		t.Fatalf("second CheckPackages failed: %v", err)
+	}
+	if got := atomic.LoadInt32(requests); got != 1 {
+		t.Errorf("advisory lookups after second scan = %d, want 1", got)
+	}
+}
+
+func TestCheckPackagesSurvivesAdvisoryLookupFailure(t *testing.T) {
+	server, requests := osvServer(t,
+		[][]string{{"GHSA-unreachable"}},
+		nil,
+		http.StatusInternalServerError,
+	)
+
+	client := newOSVClientWithURL(server.URL)
+	findings, err := client.CheckPackages(context.Background(), []Package{
+		{Name: "django", Version: "3.2.10", Ecosystem: "PyPI"},
+	})
+	if err != nil {
+		t.Fatalf("CheckPackages failed: %v", err)
+	}
+
+	// The finding is still reported, just without the enrichment.
+	if len(findings) != 1 || len(findings[0].Vulnerabilities) != 1 {
+		t.Fatalf("expected 1 finding with 1 vulnerability, got %+v", findings)
+	}
+	if got := findings[0].Vulnerabilities[0].ID; got != "GHSA-unreachable" {
+		t.Errorf("vulnerability ID = %q, want %q", got, "GHSA-unreachable")
+	}
+	if got := findings[0].Vulnerabilities[0].FixVersion; got != "" {
+		t.Errorf("FixVersion = %q, want %q", got, "")
+	}
+	// A 500 is transient, so the lookup is retried before it is given up on.
+	if got := atomic.LoadInt32(requests); got != osvMaxRetries {
+		t.Errorf("advisory lookups = %d, want %d", got, osvMaxRetries)
 	}
 }
 
