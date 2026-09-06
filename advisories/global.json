@@ -1,26 +1,17 @@
 {
   "window": "30d",
-  "total_cves": 0,
+  "total_cves": 4,
   "total_ecosystems": 6,
-  "last_updated": "2026-06-23T16:32:29.324267+00:00",
+  "last_updated": "2026-09-06T16:32:47.001348+00:00",
   "ecosystems": {
-    "maven": {
-      "ecosystem": "maven",
+    "gem": {
+      "ecosystem": "gem",
       "total_cves": 0,
       "critical_count": 0,
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:28.154715+00:00"
-    },
-    "pypi": {
-      "ecosystem": "pypi",
-      "total_cves": 0,
-      "critical_count": 0,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:27.476921+00:00"
+      "last_updated": "2026-09-06T16:32:46.875956+00:00"
     },
     "go": {
       "ecosystem": "go",
@@ -29,7 +20,16 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:27.700963+00:00"
+      "last_updated": "2026-09-06T16:32:46.181945+00:00"
+    },
+    "pypi": {
+      "ecosystem": "pypi",
+      "total_cves": 4,
+      "critical_count": 2,
+      "high_count": 1,
+      "kev_count": 4,
+      "with_fix_count": 4,
+      "last_updated": "2026-09-06T16:32:45.903832+00:00"
     },
     "cargo": {
       "ecosystem": "cargo",
@@ -38,16 +38,7 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:28.333151+00:00"
-    },
-    "gem": {
-      "ecosystem": "gem",
-      "total_cves": 0,
-      "critical_count": 0,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:29.157337+00:00"
+      "last_updated": "2026-09-06T16:32:46.723537+00:00"
     },
     "npm": {
       "ecosystem": "npm",
@@ -56,8 +47,86 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:26.807725+00:00"
+      "last_updated": "2026-09-06T16:32:45.425369+00:00"
+    },
+    "maven": {
+      "ecosystem": "maven",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-09-06T16:32:46.453150+00:00"
     }
   },
-  "top_critical": []
+  "top_critical": [
+    {
+      "cve_id": "CVE-2026-48710",
+      "summary": "CVE CVE-2026-48710 affects starlette. Review recommended.",
+      "severity": "medium",
+      "cvss_score": 6.5,
+      "epss_percentile": 0.80418,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "1.6.0",
+      "packages": [
+        "starlette"
+      ],
+      "published_date": "2026-05-26T22:16:44.020000+00:00",
+      "kev_date_added": "2026-09-02T00:00:00",
+      "added_to_advisory": "2026-09-02T20:34:22.652805+00:00",
+      "priority_score": 88.8754
+    },
+    {
+      "cve_id": "CVE-2026-64849",
+      "summary": "CVE CVE-2026-64849 affects mlflow. Review recommended.",
+      "severity": "critical",
+      "cvss_score": 9.3,
+      "epss_percentile": 0.6328,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "3.15.1",
+      "packages": [
+        "mlflow"
+      ],
+      "published_date": "2026-08-17T22:17:23.580000+00:00",
+      "kev_date_added": "2026-08-19T00:00:00",
+      "added_to_advisory": "2026-08-19T20:31:53.808141+00:00",
+      "priority_score": 87.93400000000001
+    },
+    {
+      "cve_id": "CVE-2025-62593",
+      "summary": "CVE CVE-2025-62593 affects ray. Review recommended.",
+      "severity": "critical",
+      "cvss_score": 10.0,
+      "epss_percentile": 0.29942,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "2.57.0",
+      "packages": [
+        "ray"
+      ],
+      "published_date": "2025-11-26T23:15:47.927000+00:00",
+      "kev_date_added": "2026-08-18T00:00:00",
+      "added_to_advisory": "2026-08-17T16:33:10.084063+00:00",
+      "priority_score": 78.9826
+    },
+    {
+      "cve_id": "CVE-2026-59822",
+      "summary": "CVE CVE-2026-59822 affects litellm. Review recommended.",
+      "severity": "high",
+      "cvss_score": 7.0,
+      "epss_percentile": 0.41918,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "1.101.0.dev1",
+      "packages": [
+        "litellm"
+      ],
+      "published_date": "2026-07-08T20:16:57.683000+00:00",
+      "kev_date_added": "2026-09-02T00:00:00",
+      "added_to_advisory": "2026-09-02T20:34:22.652880+00:00",
+      "priority_score": 78.0754
+    }
+  ]
 }
