@@ -1,15 +1,43 @@
 {
   "ecosystem": "go",
   "window": "30d",
-  "total_cves": 0,
-  "critical_count": 0,
+  "total_cves": 1,
+  "critical_count": 1,
   "high_count": 0,
   "medium_count": 0,
   "low_count": 0,
-  "kev_count": 0,
-  "with_fix_count": 0,
-  "last_updated": "2026-06-23T16:32:27.700963+00:00",
-  "expires_at": "2026-06-23T20:32:27.700963+00:00",
-  "cves": [],
-  "top_packages": []
+  "kev_count": 1,
+  "with_fix_count": 1,
+  "last_updated": "2026-09-12T16:31:36.654218+00:00",
+  "expires_at": "2026-09-12T20:31:36.654218+00:00",
+  "cves": [
+    {
+      "cve_id": "CVE-2026-60004",
+      "summary": "CVE CVE-2026-60004 affects gitea.dev. Review recommended.",
+      "severity": "critical",
+      "cvss_score": 9.8,
+      "epss_percentile": 0.99731,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "v1.27.3",
+      "packages": [
+        "gitea.dev",
+        "gitea"
+      ],
+      "published_date": "2026-08-26T20:17:56.010000+00:00",
+      "kev_date_added": "2026-08-25T00:00:00",
+      "added_to_advisory": "2026-09-09T16:34:43.073215+00:00",
+      "priority_score": 99.6193
+    }
+  ],
+  "top_packages": [
+    {
+      "package": "gitea.dev",
+      "count": 1
+    },
+    {
+      "package": "gitea",
+      "count": 1
+    }
+  ]
 }
