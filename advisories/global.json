@@ -2,7 +2,7 @@
   "window": "30d",
   "total_cves": 0,
   "total_ecosystems": 6,
-  "last_updated": "2026-06-23T16:32:29.324267+00:00",
+  "last_updated": "2026-10-03T16:33:50.944553+00:00",
   "ecosystems": {
     "maven": {
       "ecosystem": "maven",
@@ -11,16 +11,7 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:28.154715+00:00"
-    },
-    "pypi": {
-      "ecosystem": "pypi",
-      "total_cves": 0,
-      "critical_count": 0,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:27.476921+00:00"
+      "last_updated": "2026-10-03T16:33:50.378235+00:00"
     },
     "go": {
       "ecosystem": "go",
@@ -29,7 +20,7 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:27.700963+00:00"
+      "last_updated": "2026-10-03T16:33:50.144279+00:00"
     },
     "cargo": {
       "ecosystem": "cargo",
@@ -38,16 +29,16 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:28.333151+00:00"
+      "last_updated": "2026-10-03T16:33:50.634610+00:00"
     },
-    "gem": {
-      "ecosystem": "gem",
+    "pypi": {
+      "ecosystem": "pypi",
       "total_cves": 0,
       "critical_count": 0,
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:29.157337+00:00"
+      "last_updated": "2026-10-03T16:33:49.890971+00:00"
     },
     "npm": {
       "ecosystem": "npm",
@@ -56,7 +47,16 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:26.807725+00:00"
+      "last_updated": "2026-10-03T16:33:49.324082+00:00"
+    },
+    "gem": {
+      "ecosystem": "gem",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-10-03T16:33:50.791789+00:00"
     }
   },
   "top_critical": []
