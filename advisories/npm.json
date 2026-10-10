@@ -1,15 +1,43 @@
 {
   "ecosystem": "npm",
   "window": "30d",
-  "total_cves": 0,
-  "critical_count": 0,
+  "total_cves": 1,
+  "critical_count": 1,
   "high_count": 0,
   "medium_count": 0,
   "low_count": 0,
-  "kev_count": 0,
-  "with_fix_count": 0,
-  "last_updated": "2026-06-23T16:32:26.807725+00:00",
-  "expires_at": "2026-06-23T20:32:26.807725+00:00",
-  "cves": [],
-  "top_packages": []
+  "kev_count": 1,
+  "with_fix_count": 1,
+  "last_updated": "2026-10-10T16:33:12.702347+00:00",
+  "expires_at": "2026-10-10T20:33:12.702347+00:00",
+  "cves": [
+    {
+      "cve_id": "CVE-2023-22894",
+      "summary": "CVE CVE-2023-22894 affects @strapi/strapi. Review recommended.",
+      "severity": "critical",
+      "cvss_score": 9.8,
+      "epss_percentile": 0.7591,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "5.57.0",
+      "packages": [
+        "strapi",
+        "@strapi/strapi"
+      ],
+      "published_date": null,
+      "kev_date_added": "2026-10-08T00:00:00",
+      "added_to_advisory": "2026-10-08T20:31:20.382522+00:00",
+      "priority_score": 92.473
+    }
+  ],
+  "top_packages": [
+    {
+      "package": "strapi",
+      "count": 1
+    },
+    {
+      "package": "@strapi/strapi",
+      "count": 1
+    }
+  ]
 }

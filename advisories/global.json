@@ -1,35 +1,26 @@
 {
   "window": "30d",
-  "total_cves": 0,
+  "total_cves": 2,
   "total_ecosystems": 6,
-  "last_updated": "2026-06-23T16:32:29.324267+00:00",
+  "last_updated": "2026-10-10T16:33:14.363443+00:00",
   "ecosystems": {
-    "maven": {
-      "ecosystem": "maven",
+    "gem": {
+      "ecosystem": "gem",
       "total_cves": 0,
       "critical_count": 0,
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:28.154715+00:00"
+      "last_updated": "2026-10-10T16:33:14.187958+00:00"
     },
-    "pypi": {
-      "ecosystem": "pypi",
-      "total_cves": 0,
-      "critical_count": 0,
+    "npm": {
+      "ecosystem": "npm",
+      "total_cves": 1,
+      "critical_count": 1,
       "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:27.476921+00:00"
-    },
-    "go": {
-      "ecosystem": "go",
-      "total_cves": 0,
-      "critical_count": 0,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:27.700963+00:00"
+      "kev_count": 1,
+      "with_fix_count": 1,
+      "last_updated": "2026-10-10T16:33:12.702347+00:00"
     },
     "cargo": {
       "ecosystem": "cargo",
@@ -38,26 +29,72 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:28.333151+00:00"
+      "last_updated": "2026-10-10T16:33:14.020471+00:00"
     },
-    "gem": {
-      "ecosystem": "gem",
+    "go": {
+      "ecosystem": "go",
       "total_cves": 0,
       "critical_count": 0,
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:29.157337+00:00"
+      "last_updated": "2026-10-10T16:33:13.579789+00:00"
     },
-    "npm": {
-      "ecosystem": "npm",
+    "pypi": {
+      "ecosystem": "pypi",
       "total_cves": 0,
       "critical_count": 0,
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:26.807725+00:00"
+      "last_updated": "2026-10-10T16:33:13.266669+00:00"
+    },
+    "maven": {
+      "ecosystem": "maven",
+      "total_cves": 1,
+      "critical_count": 0,
+      "high_count": 1,
+      "kev_count": 1,
+      "with_fix_count": 1,
+      "last_updated": "2026-10-10T16:33:13.817344+00:00"
     }
   },
-  "top_critical": []
+  "top_critical": [
+    {
+      "cve_id": "CVE-2016-3081",
+      "summary": "CVE CVE-2016-3081 affects org.apache.struts:struts2-core. Review recommended.",
+      "severity": "high",
+      "cvss_score": 8.1,
+      "epss_percentile": 0.99838,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "7.4.0",
+      "packages": [
+        "struts",
+        "org.apache.struts:struts2-core"
+      ],
+      "published_date": null,
+      "kev_date_added": "2026-10-08T00:00:00",
+      "added_to_advisory": "2026-10-08T20:31:21.153073+00:00",
+      "priority_score": 97.10140000000001
+    },
+    {
+      "cve_id": "CVE-2023-22894",
+      "summary": "CVE CVE-2023-22894 affects @strapi/strapi. Review recommended.",
+      "severity": "critical",
+      "cvss_score": 9.8,
+      "epss_percentile": 0.7591,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "5.57.0",
+      "packages": [
+        "strapi",
+        "@strapi/strapi"
+      ],
+      "published_date": null,
+      "kev_date_added": "2026-10-08T00:00:00",
+      "added_to_advisory": "2026-10-08T20:31:20.382522+00:00",
+      "priority_score": 92.473
+    }
+  ]
 }
