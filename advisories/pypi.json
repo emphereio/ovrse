@@ -1,15 +1,43 @@
 {
   "ecosystem": "pypi",
   "window": "30d",
-  "total_cves": 0,
-  "critical_count": 0,
+  "total_cves": 1,
+  "critical_count": 1,
   "high_count": 0,
   "medium_count": 0,
   "low_count": 0,
-  "kev_count": 0,
-  "with_fix_count": 0,
-  "last_updated": "2026-06-23T16:32:27.476921+00:00",
-  "expires_at": "2026-06-23T20:32:27.476921+00:00",
-  "cves": [],
-  "top_packages": []
+  "kev_count": 1,
+  "with_fix_count": 1,
+  "last_updated": "2026-10-30T16:31:29.493318+00:00",
+  "expires_at": "2026-10-30T20:31:29.493318+00:00",
+  "cves": [
+    {
+      "cve_id": "CVE-2026-111497",
+      "summary": "CVE CVE-2026-111497 affects brotli. Review recommended.",
+      "severity": "critical",
+      "cvss_score": 9.6,
+      "epss_percentile": 0.9903,
+      "kev_listed": true,
+      "has_fix": true,
+      "fix_version": "1.2.1",
+      "packages": [
+        "brotli",
+        "brotlicffi"
+      ],
+      "published_date": null,
+      "kev_date_added": "2026-10-27T00:00:00",
+      "added_to_advisory": "2026-10-27T20:31:59.142425+00:00",
+      "priority_score": 99.10900000000001
+    }
+  ],
+  "top_packages": [
+    {
+      "package": "brotli",
+      "count": 1
+    },
+    {
+      "package": "brotlicffi",
+      "count": 1
+    }
+  ]
 }
