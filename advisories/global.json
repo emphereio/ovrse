@@ -1,18 +1,9 @@
 {
   "window": "30d",
-  "total_cves": 0,
+  "total_cves": 1,
   "total_ecosystems": 6,
-  "last_updated": "2026-06-23T16:32:29.324267+00:00",
+  "last_updated": "2026-11-27T20:31:19.248272+00:00",
   "ecosystems": {
-    "maven": {
-      "ecosystem": "maven",
-      "total_cves": 0,
-      "critical_count": 0,
-      "high_count": 0,
-      "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:28.154715+00:00"
-    },
     "pypi": {
       "ecosystem": "pypi",
       "total_cves": 0,
@@ -20,7 +11,7 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:27.476921+00:00"
+      "last_updated": "2026-11-27T20:31:17.847914+00:00"
     },
     "go": {
       "ecosystem": "go",
@@ -29,7 +20,16 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:27.700963+00:00"
+      "last_updated": "2026-11-27T20:31:18.194479+00:00"
+    },
+    "maven": {
+      "ecosystem": "maven",
+      "total_cves": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "kev_count": 0,
+      "with_fix_count": 0,
+      "last_updated": "2026-11-27T20:31:18.568542+00:00"
     },
     "cargo": {
       "ecosystem": "cargo",
@@ -38,7 +38,7 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:28.333151+00:00"
+      "last_updated": "2026-11-27T20:31:18.799508+00:00"
     },
     "gem": {
       "ecosystem": "gem",
@@ -47,17 +47,35 @@
       "high_count": 0,
       "kev_count": 0,
       "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:29.157337+00:00"
+      "last_updated": "2026-11-27T20:31:18.971366+00:00"
     },
     "npm": {
       "ecosystem": "npm",
-      "total_cves": 0,
-      "critical_count": 0,
+      "total_cves": 1,
+      "critical_count": 1,
       "high_count": 0,
       "kev_count": 0,
-      "with_fix_count": 0,
-      "last_updated": "2026-06-23T16:32:26.807725+00:00"
+      "with_fix_count": 1,
+      "last_updated": "2026-11-27T20:31:17.155671+00:00"
     }
   },
-  "top_critical": []
+  "top_critical": [
+    {
+      "cve_id": "CVE-2024-3094",
+      "summary": "CVE CVE-2024-3094 affects xz. Review recommended.",
+      "severity": "critical",
+      "cvss_score": 10.0,
+      "epss_percentile": 0.99809,
+      "kev_listed": false,
+      "has_fix": true,
+      "fix_version": "2.0.2",
+      "packages": [
+        "xz"
+      ],
+      "published_date": null,
+      "kev_date_added": null,
+      "added_to_advisory": "2026-11-24T00:31:07.055422+00:00",
+      "priority_score": 49.9427
+    }
+  ]
 }
